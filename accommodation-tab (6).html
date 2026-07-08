@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accommodation — APEx Athens 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0C2044;
+    --navy-2:#122A54;
+    --cyan:#3FC6D8;
+    --cyan-dark:#1FA9BC;
+    --gold:#E1A94C;
+    --green:#3E9B5C;
+    --green-bg:#EAF6EE;
+    --blue-bg:#EAF6FA;
+    --amber-bg:#FCF3E4;
+    --paper:#F5F6F8;
+    --card-border:#E7E9EE;
+    --ink:#101828;
+    --ink-soft:#5B6472;
+    --ink-mute:#8A93A3;
+    --red:#D63A2E;
+    --red-bg:#FBEAE8;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Manrope',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;}
+
+  /* ================= NAVBAR ================= */
+  .navbar{
+    background:var(--navy);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 40px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{width:42px;height:42px;flex:none;}
+  .brand-text .name{
+    font-size:22px;font-weight:800;color:#fff;letter-spacing:.01em;
+    display:flex;align-items:baseline;
+  }
+  .brand-text .name .ex{color:#8CC63F;}
+  .brand-text .tag{font-size:11px;color:#9FB2C8;font-weight:600;letter-spacing:.02em;margin-top:1px;}
+  .navlinks{display:flex;align-items:center;gap:34px;}
+  .navlinks a{
+    color:#D7DEE8;font-weight:600;font-size:15px;
+    padding-bottom:18px;border-bottom:2px solid transparent;
+  }
+  .navlinks a.active{color:#fff;border-bottom-color:var(--cyan);}
+  .register-btn{
+    background:var(--cyan);
+    color:#06222B;
+    font-weight:800;
+    font-size:14.5px;
+    padding:12px 22px;
+    border-radius:24px;
+    border:none;
+  }
+
+  .datebar{
+    background:var(--navy-2);
+    display:flex;
+    justify-content:center;
+    gap:14px;
+    align-items:center;
+    padding:12px 20px;
+    color:#DCE6F0;
+    font-size:14.5px;
+    font-weight:600;
+  }
+  .datebar .sep{color:#4C6485;}
+  .datebar svg{vertical-align:-3px;margin-right:6px;}
+  .datebar .pin{color:var(--cyan);}
+
+  /* ================= INTRO STRIP ================= */
+  .intro{
+    max-width:1360px;
+    margin:28px auto 0;
+    padding:0 40px;
+  }
+  .intro-box{
+    background:var(--amber-bg);
+    border:1px solid #EEDDBB;
+    border-radius:14px;
+    padding:16px 22px;
+    font-size:14.5px;
+    color:#7A5B22;
+    line-height:1.6;
+  }
+  .intro-box b{color:#5C4116;}
+
+  /* ================= LAYOUT ================= */
+  .layout{
+    max-width:1360px;
+    margin:0 auto;
+    padding:24px 40px 60px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 560px;
+    gap:28px;
+    align-items:flex-start;
+  }
+
+  .list-panel{min-width:0;}
+
+  .list-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+    background:#fff;
+    border:1px solid var(--card-border);
+    border-radius:16px;
+    padding:18px 22px;
+    margin-bottom:18px;
+  }
+  .list-head h2{
+    margin:0;font-size:19px;font-weight:800;color:var(--navy);
+    margin-right:20px;
+  }
+  .sortbar{display:flex;align-items:center;gap:8px;}
+  .sortbar .label{font-size:13.5px;color:var(--ink-mute);font-weight:600;margin-right:4px;}
+  .sort-btn{
+    display:flex;align-items:center;gap:6px;
+    background:#fff;border:1px solid #DCE1E9;
+    color:var(--ink-soft);font-weight:700;font-size:13.5px;
+    padding:9px 14px;border-radius:20px;
+  }
+  .sort-btn svg{width:15px;height:15px;}
+  .sort-btn.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+
+  .cards{display:flex;flex-direction:column;gap:16px;}
+
+  .card{
+    background:#fff;
+    border:1px solid var(--card-border);
+    border-radius:18px;
+    padding:22px 24px 20px;
+    transition:box-shadow .2s ease, border-color .2s ease;
+  }
+  .card.selected{
+    border-color:var(--cyan);
+    box-shadow:0 0 0 1.5px var(--cyan);
+    border-left:5px solid var(--gold);
+    padding-left:20px;
+  }
+  .card-top{
+    display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+    cursor:pointer;
+  }
+  .card-top h3{margin:0 0 6px;font-size:19px;font-weight:800;color:var(--navy);}
+  .stars{color:var(--gold);font-size:14px;letter-spacing:2px;}
+  .stars .off{color:#E4E4E4;}
+
+  hr.div{border:none;border-top:1px solid #EEF0F3;margin:14px 0;}
+
+  .route-label{
+    font-size:11.5px;font-weight:800;letter-spacing:.09em;color:var(--ink-mute);
+    margin-bottom:10px;
+  }
+  .route-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+  .route-box{
+    border-radius:12px;
+    padding:14px 10px 12px;
+    text-align:center;
+  }
+  .route-box.walk{background:var(--green-bg);}
+  .route-box.drive{background:var(--blue-bg);}
+  .route-box.transit{background:var(--amber-bg);}
+  .route-box svg{width:20px;height:20px;margin-bottom:6px;}
+  .route-box .time{font-size:16px;font-weight:800;color:var(--ink);}
+  .route-box .dist{font-size:12px;color:var(--ink-mute);font-weight:600;margin-top:2px;}
+  .route-box .showroute{
+    display:inline-block;margin-top:8px;font-size:12.5px;font-weight:700;
+  }
+  .route-box.walk .showroute{color:var(--green);}
+  .route-box.drive .showroute{color:var(--cyan-dark);}
+  .route-box.transit .showroute{color:#B8801E;}
+
+  .card-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .book-btn{
+    display:flex;align-items:center;gap:8px;
+    background:var(--navy);color:#fff;font-weight:800;font-size:14.5px;
+    padding:12px 20px;border-radius:24px;border:none;
+  }
+  .book-btn svg{width:14px;height:14px;}
+  .call-btn{
+    display:flex;align-items:center;gap:8px;
+    background:#fff;color:var(--ink);font-weight:700;font-size:14.5px;
+    padding:12px 18px;border-radius:24px;border:1px solid #DCE1E9;
+  }
+  .call-btn svg{width:15px;height:15px;color:var(--cyan-dark);}
+
+  /* ================= MAP ================= */
+  .map-panel{
+    position:sticky;top:24px;
+    height:calc(100vh - 48px);
+    min-height:560px;
+    border-radius:18px;
+    overflow:hidden;
+    background:#BFE2EA;
+    border:1px solid var(--card-border);
+  }
+  .map-inner{position:absolute;inset:0;}
+  .land{
+    position:absolute;
+    background:#EFEDE6;
+    border-radius:48% 40% 52% 46% / 45% 55% 40% 52%;
+  }
+  .land.l1{width:120%;height:75%;left:-30%;top:8%;transform:rotate(-8deg);}
+  .water-label{position:absolute;font-size:11px;color:#9FCBD6;font-weight:700;letter-spacing:.04em;}
+  .district{
+    position:absolute;font-size:10.5px;color:#B9B2A2;font-weight:700;letter-spacing:.03em;
+    text-transform:uppercase;
+  }
+  .road{position:absolute;background:#fff;opacity:.7;}
+
+  .pin{
+    position:absolute;
+    transform:translate(-50%,-100%);
+    background:#fff;
+    color:var(--navy);
+    font-size:12px;font-weight:700;
+    padding:6px 10px;
+    border-radius:8px;
+    box-shadow:0 3px 8px rgba(15,35,64,.18);
+    white-space:nowrap;
+    cursor:pointer;
+    border:1px solid #fff;
+  }
+  .pin::after{
+    content:"";
+    position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);
+    width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;
+    border-top:5px solid #fff;
+  }
+  .pin.active{background:var(--navy);color:#fff;}
+  .pin.active::after{border-top-color:var(--navy);}
+
+  .pin.venue{
+    background:var(--red);color:#fff;font-weight:800;
+    padding:8px 14px;border-radius:20px;
+  }
+  .pin.venue::after{border-top-color:var(--red);}
+
+  .popup{
+    position:absolute;
+    width:270px;
+    background:#fff;
+    border-radius:16px;
+    padding:20px 20px 18px;
+    box-shadow:0 20px 44px -14px rgba(15,35,64,.35);
+    transform:translate(-14%,-112%);
+  }
+  .popup::after{
+    content:"";
+    position:absolute;left:22%;bottom:-9px;
+    width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;
+    border-top:9px solid #fff;
+  }
+  .popup h4{margin:0 0 4px;font-size:17px;font-weight:800;color:var(--navy);}
+  .popup .stars{font-size:13px;margin-bottom:10px;display:block;}
+  .popup .quickroute{
+    display:flex;gap:14px;font-size:13px;font-weight:700;color:var(--ink-soft);margin-bottom:12px;
+  }
+  .popup .quickroute span{display:flex;align-items:center;gap:4px;}
+  .popup .quickroute svg{width:14px;height:14px;}
+  .popup .phone{
+    display:block;color:var(--cyan-dark);font-weight:700;font-size:14px;margin-bottom:12px;
+  }
+  .popup .book-btn{width:100%;justify-content:center;padding:11px;}
+
+  .zoom{
+    position:absolute;right:16px;bottom:16px;
+    display:flex;flex-direction:column;
+    background:#fff;border-radius:10px;overflow:hidden;
+    box-shadow:0 4px 12px rgba(15,35,64,.2);
+  }
+  .zoom button{
+    width:38px;height:38px;border:none;background:#fff;font-size:18px;font-weight:700;color:var(--ink-soft);
+  }
+  .zoom button:first-child{border-bottom:1px solid #EEF0F3;}
+
+  @media(max-width:1080px){
+    .layout{grid-template-columns:1fr;}
+    .map-panel{position:relative;top:0;height:420px;order:-1;}
+  }
+
+  /* ================= BOOKING MODAL =================
+     👉 ΣΗΜΕΙΟ ΕΝΑΡΞΗΣ: όλο το CSS από εδώ μέχρι το τέλος του αρχείου
+     (μαζί με το αντίστοιχο HTML/JS section πιο κάτω) είναι το κομμάτι
+     "Φόρμα Κράτησης" — αντίγραψέ το ολόκληρο στο πραγματικό site. */
+  .price-box{
+    background:var(--amber-bg);border-radius:12px;padding:14px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+    margin:4px 0 18px;
+  }
+  .price-box .label{font-size:13px;font-weight:700;color:#7A5B22;}
+  .price-box .value{font-size:19px;font-weight:800;color:var(--navy);}
+  .price-box .note{font-size:11.5px;color:#8A6112;display:block;margin-top:2px;}
+  .form-error{
+    display:none;background:var(--red-bg);color:var(--red);
+    font-size:13px;font-weight:700;padding:12px 16px;border-radius:10px;margin:14px 0;
+  }
+  .form-error.show{display:block;}
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(12,32,68,0.55);
+    display:none;
+    align-items:flex-start;justify-content:center;
+    padding:40px 20px;
+    overflow-y:auto;
+    z-index:1000;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:#fff;
+    border-radius:20px;
+    width:100%;max-width:680px;
+    padding:0;
+    box-shadow:0 30px 70px -20px rgba(12,32,68,.45);
+    animation:modalIn .22s ease;
+  }
+  @keyframes modalIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  .modal-head{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    padding:26px 30px 18px;
+    border-bottom:1px solid var(--card-border);
+  }
+  .modal-head h3{margin:0 0 4px;font-size:21px;font-weight:800;color:var(--navy);}
+  .modal-head p{margin:0;font-size:13.5px;color:var(--ink-mute);}
+  .modal-close{
+    border:none;background:#F1F2F5;color:var(--ink-soft);
+    width:32px;height:32px;border-radius:50%;font-size:16px;
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .modal-body{padding:24px 30px 8px;}
+  .modal-foot{
+    padding:18px 30px 26px;
+    display:flex;justify-content:flex-end;gap:12px;
+    border-top:1px solid var(--card-border);
+  }
+
+  .form-section-title{
+    font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--cyan-dark);margin:22px 0 12px;
+  }
+  .form-section-title:first-child{margin-top:0;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+  .form-field.full{grid-column:1 / -1;}
+  .form-field label{font-size:13px;font-weight:700;color:var(--ink);}
+  .form-field label .opt{color:var(--ink-mute);font-weight:600;}
+  .form-field input[type=text],
+  .form-field input[type=email],
+  .form-field input[type=tel],
+  .form-field input[type=number],
+  .form-field input[type=date],
+  .form-field select,
+  .form-field textarea{
+    border:1px solid #DCE1E9;border-radius:10px;
+    padding:10px 12px;font-size:14px;font-family:inherit;color:var(--ink);
+    background:#fff;
+  }
+  .form-field textarea{resize:vertical;min-height:64px;}
+  .form-field input:focus,
+  .form-field select:focus,
+  .form-field textarea:focus{outline:2px solid var(--cyan);outline-offset:1px;}
+
+  .radio-row{display:flex;gap:18px;}
+  .radio-opt{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--ink);font-weight:600;}
+  .radio-opt input{accent-color:var(--navy);}
+
+  .invoice-fields{display:none;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px;}
+  .invoice-fields.show{display:grid;}
+
+  .terms-row{
+    display:flex;align-items:flex-start;gap:10px;
+    background:var(--amber-bg);border-radius:12px;padding:14px 16px;
+    margin:18px 0 6px;
+  }
+  .terms-row input{margin-top:3px;accent-color:var(--navy);}
+  .terms-row label{font-size:13px;color:#7A5B22;line-height:1.5;}
+  .terms-row a{color:var(--cyan-dark);font-weight:700;}
+
+  .submit-btn{
+    background:var(--navy);color:#fff;font-weight:800;font-size:14.5px;
+    padding:13px 26px;border-radius:24px;border:none;
+  }
+  .submit-btn:disabled{background:#B9C0CC;cursor:not-allowed;}
+  .cancel-btn{
+    background:#fff;color:var(--ink-soft);font-weight:700;font-size:14.5px;
+    padding:13px 22px;border-radius:24px;border:1px solid #DCE1E9;
+  }
+
+  .success-view{padding:50px 30px 40px;text-align:center;display:none;}
+  .success-view.show{display:block;}
+  .success-view .check{
+    width:64px;height:64px;border-radius:50%;background:var(--green-bg);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
+  }
+  .success-view h3{margin:0 0 8px;font-size:20px;color:var(--navy);}
+  .success-view p{margin:0 0 22px;color:var(--ink-soft);font-size:14px;}
+  .summary-box{
+    background:var(--paper);border-radius:14px;padding:18px 20px;
+    text-align:left;font-size:13.5px;color:var(--ink);margin-bottom:24px;
+  }
+  .summary-box div{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #EDEFF3;}
+  .summary-box div:last-child{border-bottom:none;}
+  .summary-box span:first-child{color:var(--ink-mute);font-weight:600;}
+  .summary-box span:last-child{font-weight:700;}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 48 48">
+      <circle cx="24" cy="24" r="22" fill="#8CC63F"/>
+      <path d="M2 26 Q24 14 46 26" stroke="#0C2044" stroke-width="3" fill="none" opacity=".55"/>
+      <path d="M2 32 Q24 20 46 32" stroke="#0C2044" stroke-width="3" fill="none" opacity=".8"/>
+      <path d="M2 38 Q24 26 46 38" stroke="#0C2044" stroke-width="3" fill="none"/>
+    </svg>
+    <div class="brand-text">
+      <div class="name">AP<span class="ex">Ex</span></div>
+      <div class="tag">Association of Power Exchanges</div>
+    </div>
+  </div>
+  <div class="navlinks">
+    <a href="#">About</a>
+    <a href="#">Agenda</a>
+    <a href="#">Sponsors</a>
+    <a href="#">Registration</a>
+    <a href="#" class="active">Information</a>
+    <a href="#">Contact</a>
+  </div>
+  <button class="register-btn">Register Now</button>
+</nav>
+
+<div class="datebar">
+  <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3FC6D8" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>October 21 – 23, 2026</span>
+  <span class="sep">|</span>
+  <span class="pin"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3FC6D8" stroke-width="2" style="vertical-align:-3px;margin-right:6px;"><path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Asteria Domus, Glyfada, Athens</span>
+</div>
+
+<div class="intro">
+  <div class="intro-box">
+    We've arranged preferred rates at several hotels along the coast, all within easy reach of Asteria Domus. Book directly with each property using the delegate
+    codes — see details below.
+  </div>
+</div>
+
+<div class="layout">
+
+  <section class="list-panel">
+    <div class="list-head">
+      <h2 id="hotelCount">8 Hotels</h2>
+      <!-- 👉 ΚΟΥΜΠΙ ΚΡΑΤΗΣΗΣ (trigger #3) — γενικό, χωρίς προεπιλεγμένο ξενοδοχείο -->
+      <button class="book-btn" onclick="openBookingForm()">+ Νέα Κράτηση</button>
+      <div class="sortbar">
+        <span class="label">Sort by</span>
+        <button class="sort-btn active" data-sort="name">Name</button>
+        <button class="sort-btn" data-sort="walk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13" cy="4" r="2"/><path d="M10 22l1-7-3-2 1-5 4 1 2 3 3 1M8 22l3-6"/></svg>
+          Walk
+        </button>
+        <button class="sort-btn" data-sort="drive">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13l2-6a2 2 0 0 1 2-1h10a2 2 0 0 1 2 1l2 6v5a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="16.5" r="1.2"/><circle cx="16.5" cy="16.5" r="1.2"/></svg>
+          Drive
+        </button>
+        <button class="sort-btn" data-sort="transit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="13" rx="2"/><path d="M4 12h16M9 21l-1.5-2M15 21l1.5-2"/><circle cx="8" cy="14.5" r=".8"/><circle cx="16" cy="14.5" r=".8"/></svg>
+          Transit
+        </button>
+      </div>
+    </div>
+
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <aside class="map-panel" id="mapPanel">
+    <div class="map-inner">
+      <div class="land l1"></div>
+      <div class="district" style="top:6%;left:70%;">Terpsithea</div>
+      <div class="district" style="top:34%;left:82%;">Ano Glyfada</div>
+      <div class="district" style="top:70%;left:78%;">Ano Voula</div>
+      <div class="water-label" style="top:60%;left:8%;">Saronic Gulf</div>
+
+      <div class="pin venue" style="top:46%;left:44%;">⚓ Asteria Domus</div>
+
+      <div id="pins"></div>
+    </div>
+    <div class="zoom"><button>+</button><button>&minus;</button></div>
+  </aside>
+
+</div>
+
+<script>
+// 👉 Βάλε εδώ το webhook URL από το Retool Workflow (ή αργότερα το Payload API endpoint)
+const BOOKING_WEBHOOK_URL = 'https://apex-booking-proxy.ellie32on.workers.dev/';
+
+const ICON_WALK = '<svg viewBox="0 0 24 24" fill="none" stroke="#3E9B5C" stroke-width="2"><circle cx="13" cy="4" r="2"/><path d="M10 22l1-7-3-2 1-5 4 1 2 3 3 1M8 22l3-6"/></svg>';
+const ICON_DRIVE = '<svg viewBox="0 0 24 24" fill="none" stroke="#1FA9BC" stroke-width="2"><path d="M3 13l2-6a2 2 0 0 1 2-1h10a2 2 0 0 1 2 1l2 6v5a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="16.5" r="1.2"/><circle cx="16.5" cy="16.5" r="1.2"/></svg>';
+const ICON_TRANSIT = '<svg viewBox="0 0 24 24" fill="none" stroke="#B8801E" stroke-width="2"><rect x="4" y="4" width="16" height="13" rx="2"/><path d="M4 12h16M9 21l-1.5-2M15 21l1.5-2"/><circle cx="8" cy="14.5" r=".8"/><circle cx="16" cy="14.5" r=".8"/></svg>';
+const ICON_PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8 9.7a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2.3z"/></svg>';
+const ICON_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M8 7h9v9"/></svg>';
+
+const hotels = [
+  {name:"Ace Hotel & Swim Club Athens", stars:5, walk:[10,0.7], drive:[2,0.8], transit:[10,0.7], phone:"+30 210 0220 188", pos:[24,32]},
+  {name:"Glyfada Riviera Hotel", stars:4, walk:[14,1.0], drive:[4,1.2], transit:[12,1.1], phone:"+30 210 0341 220", pos:[40,26]},
+  {name:"Athens Coast Hotel", stars:4, walk:[18,1.3], drive:[6,2.1], transit:[15,1.8], phone:"+30 210 0552 761", pos:[58,52]},
+  {name:"Emmantina Hotel", stars:4, walk:[16,1.1], drive:[5,1.6], transit:[13,1.4], phone:"+30 210 0894 405", pos:[55,63]},
+  {name:"Congo Palace", stars:3, walk:[20,1.5], drive:[7,2.4], transit:[17,2.0], phone:"+30 210 0762 913", pos:[62,70]},
+  {name:"Seaview Cityscape Hotel", stars:4, walk:[24,1.8], drive:[8,2.8], transit:[19,2.3], phone:"+30 210 0128 447", pos:[70,79]},
+  {name:"Dusit Suites Athens", stars:5, walk:[27,2.0], drive:[9,3.1], transit:[21,2.6], phone:"+30 210 0937 332", pos:[76,87]},
+  {name:"Poseidon Grand Hotel", stars:5, walk:[31,2.3], drive:[11,3.6], transit:[24,3.0], phone:"+30 210 0664 559", pos:[70,94]},
+];
+
+// 👉 ΤΙΜΕΣ ΑΝΑ ΔΙΑΝΥΚΤΕΡΕΥΣΗ, ανά ξενοδοχείο + τύπο δωματίου.
+// Αντικατέστησε αυτά τα νούμερα με τις πραγματικές τιμές του ξενοδοχείου σου
+// (ιδανικά, στο πραγματικό site αυτό θα έρχεται από τη βάση/allotments table
+// αντί να είναι hardcoded εδώ).
+const roomPricing = {
+  "Ace Hotel & Swim Club Athens":  { "Μονόκλινο":185, "Δίκλινο":230, "Τρίκλινο":290 },
+  "Glyfada Riviera Hotel":         { "Μονόκλινο":149, "Δίκλινο":185, "Τρίκλινο":230 },
+  "Athens Coast Hotel":            { "Μονόκλινο":120, "Δίκλινο":150, "Τρίκλινο":190 },
+  "Emmantina Hotel":               { "Μονόκλινο":140, "Δίκλινο":175, "Τρίκλινο":215 },
+  "Congo Palace":                  { "Μονόκλινο":110, "Δίκλινο":140, "Τρίκλινο":175 },
+  "Seaview Cityscape Hotel":       { "Μονόκλινο":160, "Δίκλινο":200, "Τρίκλινο":245 },
+  "Dusit Suites Athens":           { "Μονόκλινο":210, "Δίκλινο":260, "Τρίκλινο":310 },
+  "Poseidon Grand Hotel":          { "Μονόκλινο":180, "Δίκλινο":220, "Τρίκλινο":300 },
+};
+
+function nightsBetween(checkin, checkout){
+  if(!checkin || !checkout) return 0;
+  const ms = new Date(checkout) - new Date(checkin);
+  const nights = Math.round(ms / 86400000);
+  return nights > 0 ? nights : 0;
+}
+
+function calcTotalPrice(hotel, roomType, checkin, checkout){
+  const nights = nightsBetween(checkin, checkout);
+  const perNight = (roomPricing[hotel] && roomPricing[hotel][roomType]) || 0;
+  return { nights, perNight, total: nights * perNight };
+}
+
+let selected = 0;
+let sortKey = "name";
+
+function starRow(n){
+  let s = "";
+  for(let i=0;i<5;i++) s += i < n ? "★" : '<span class="off">★</span>';
+  return `<span class="stars">${s}</span>`;
+}
+
+function sortedHotels(){
+  const arr = hotels.map((h,i)=>({...h, idx:i}));
+  if(sortKey === "name") arr.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sortKey === "walk") arr.sort((a,b)=>a.walk[0]-b.walk[0]);
+  else if(sortKey === "drive") arr.sort((a,b)=>a.drive[0]-b.drive[0]);
+  else if(sortKey === "transit") arr.sort((a,b)=>a.transit[0]-b.transit[0]);
+  return arr;
+}
+
+function render(){
+  document.getElementById('hotelCount').textContent = hotels.length + " Hotels";
+
+  const cardsEl = document.getElementById('cards');
+  cardsEl.innerHTML = sortedHotels().map(h => `
+    <div class="card ${h.idx===selected ? 'selected':''}" data-idx="${h.idx}">
+      <div class="card-top" data-select="${h.idx}">
+        <div>
+          <h3>${h.name}</h3>
+          ${starRow(h.stars)}
+        </div>
+      </div>
+      <hr class="div">
+      <div class="route-label">ROUTE TO VENUE</div>
+      <div class="route-grid">
+        <div class="route-box walk">${ICON_WALK}<div class="time">${h.walk[0]} min</div><div class="dist">${h.walk[1]} km · Walk</div><a class="showroute" href="#">Show route →</a></div>
+        <div class="route-box drive">${ICON_DRIVE}<div class="time">${h.drive[0]} min</div><div class="dist">${h.drive[1]} km · Drive</div><a class="showroute" href="#">Show route →</a></div>
+        <div class="route-box transit">${ICON_TRANSIT}<div class="time">${h.transit[0]} min</div><div class="dist">${h.transit[1]} km · Transit</div><a class="showroute" href="#">Show route →</a></div>
+      </div>
+      <div class="card-actions">
+        <!-- 👉 ΚΟΥΜΠΙ ΚΡΑΤΗΣΗΣ (trigger #1) — ανοίγει τη φόρμα με προεπιλεγμένο αυτό το ξενοδοχείο -->
+        <button class="book-btn" onclick="openBookingForm('${h.name.replace(/'/g,"\\'")}')">Book Online ${ICON_ARROW}</button>
+        <button class="call-btn">${ICON_PHONE}${h.phone}</button>
+      </div>
+    </div>
+  `).join('');
+
+  cardsEl.querySelectorAll('[data-select]').forEach(el=>{
+    el.addEventListener('click', ()=>{ selected = parseInt(el.dataset.select); render(); });
+  });
+
+  const pinsEl = document.getElementById('pins');
+  pinsEl.innerHTML = hotels.map((h,i)=>`
+    <div class="pin ${i===selected?'active':''}" data-select="${i}" style="top:${h.pos[0]}%; left:${h.pos[1]}%;">${h.name}</div>
+  `).join('');
+  pinsEl.querySelectorAll('[data-select]').forEach(el=>{
+    el.addEventListener('click', ()=>{ selected = parseInt(el.dataset.select); render(); });
+  });
+
+  const h = hotels[selected];
+  let popup = document.getElementById('popup');
+  if(popup) popup.remove();
+  popup = document.createElement('div');
+  popup.id = 'popup';
+  popup.className = 'popup';
+  popup.style.top = h.pos[0] + '%';
+  popup.style.left = h.pos[1] + '%';
+  popup.innerHTML = `
+    <h4>${h.name}</h4>
+    ${starRow(h.stars)}
+    <div class="quickroute">
+      <span>${ICON_WALK}${h.walk[0]} min</span>
+      <span>${ICON_DRIVE}${h.drive[0]} min</span>
+      <span>${ICON_TRANSIT}${h.transit[0]} min</span>
+    </div>
+    <a class="phone" href="tel:${h.phone}">${h.phone}</a>
+    <!-- 👉 ΚΟΥΜΠΙ ΚΡΑΤΗΣΗΣ (trigger #2) — ίδιο, μέσα στο popup του χάρτη -->
+    <button class="book-btn" onclick="openBookingForm('${h.name.replace(/'/g,"\\'")}')">Book Online</button>
+  `;
+  document.getElementById('mapPanel').querySelector('.map-inner').appendChild(popup);
+}
+
+/* ================= BOOKING FORM ================= */
+const hotelSelectOptions = hotels.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+
+function buildBookingModal(){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'bookingOverlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h3>Φόρμα Κράτησης</h3>
+          <p>Asteria Domus, Glyfada, Athens — October 21–23, 2026</p>
+        </div>
+        <button class="modal-close" onclick="closeBookingForm()">✕</button>
+      </div>
+
+      <form id="bookingForm">
+        <div class="modal-body">
+
+          <div class="form-section-title">Στοιχεία Επικοινωνίας</div>
+          <div class="form-grid">
+            <div class="form-field full">
+              <label>Ονοματεπώνυμο *</label>
+              <input type="text" name="fullName" required>
+            </div>
+            <div class="form-field">
+              <label>Email *</label>
+              <input type="email" name="email" required>
+            </div>
+            <div class="form-field">
+              <label>Κινητό *</label>
+              <input type="tel" name="mobile" required placeholder="+30 69...">
+            </div>
+          </div>
+
+          <div class="form-section-title">Στοιχεία Κράτησης</div>
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Ημερομηνία άφιξης *</label>
+              <input type="date" name="checkin" required>
+            </div>
+            <div class="form-field">
+              <label>Ημερομηνία αναχώρησης *</label>
+              <input type="date" name="checkout" required>
+            </div>
+            <div class="form-field">
+              <label>Επιλογή ξενοδοχείου *</label>
+              <select name="hotel" id="hotelSelect" required>${hotelSelectOptions}</select>
+            </div>
+            <div class="form-field">
+              <label>Επιλογή τύπου δωματίου *</label>
+              <select name="roomType" required>
+                <option value="Μονόκλινο">Μονόκλινο</option>
+                <option value="Δίκλινο">Δίκλινο</option>
+                <option value="Τρίκλινο">Τρίκλινο</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Αριθμός ατόμων *</label>
+              <input type="number" name="guests" min="1" max="6" value="1" required>
+            </div>
+            <div class="form-field">
+              <label>Στοιχεία συνοδού <span class="opt">(προαιρετικό)</span></label>
+              <input type="text" name="companion" placeholder="Ονοματεπώνυμο συνοδού">
+            </div>
+          </div>
+
+          <div class="price-box">
+            <div>
+              <span class="label">Εκτιμώμενο κόστος</span>
+              <span class="note" id="priceNote">Επίλεξε ημερομηνίες, ξενοδοχείο και τύπο δωματίου</span>
+            </div>
+            <span class="value" id="priceValue">€0</span>
+          </div>
+
+          <div class="form-error" id="formError"></div>
+
+          <div class="form-section-title">Επιπλέον Πληροφορίες</div>
+          <div class="form-field full">
+            <label>Ειδικές ανάγκες <span class="opt">(διατροφικές, προσβασιμότητα κ.λπ.)</span></label>
+            <textarea name="specialNeeds"></textarea>
+          </div>
+          <div class="form-field full">
+            <label>Παρατηρήσεις <span class="opt">(προαιρετικό)</span></label>
+            <textarea name="notes"></textarea>
+          </div>
+
+          <div class="form-section-title">Τιμολόγηση</div>
+          <div class="form-field full">
+            <div class="radio-row">
+              <label class="radio-opt"><input type="radio" name="billingType" value="receipt" checked> Απόδειξη</label>
+              <label class="radio-opt"><input type="radio" name="billingType" value="invoice"> Τιμολόγιο</label>
+            </div>
+          </div>
+          <div class="invoice-fields" id="invoiceFields">
+            <div class="form-field">
+              <label>Επωνυμία εταιρείας</label>
+              <input type="text" name="companyName">
+            </div>
+            <div class="form-field">
+              <label>ΑΦΜ</label>
+              <input type="text" name="vat">
+            </div>
+            <div class="form-field full">
+              <label>Δ.Ο.Υ.</label>
+              <input type="text" name="taxOffice">
+            </div>
+          </div>
+
+          <div class="terms-row">
+            <input type="checkbox" id="acceptTerms" required>
+            <label for="acceptTerms">Αποδέχομαι τους <a href="#">όρους κράτησης, την πολιτική ακύρωσης/αλλαγών</a> και τη διαχείριση των στοιχείων μου από την GS Travel. *</label>
+          </div>
+        </div>
+
+        <div class="modal-foot">
+          <button type="button" class="cancel-btn" onclick="closeBookingForm()">Άκυρο</button>
+          <button type="submit" class="submit-btn" id="submitBookingBtn" disabled>Υποβολή Κράτησης</button>
+        </div>
+      </form>
+
+      <div class="success-view" id="successView">
+        <div class="check">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#3E9B5C" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+        <h3>Η κράτησή σας καταχωρήθηκε</h3>
+        <p>Θα λάβετε email επιβεβαίωσης με τα στοιχεία της κράτησης και το payment status.</p>
+        <div class="summary-box" id="summaryBox"></div>
+        <button class="submit-btn" onclick="closeBookingForm()">Κλείσιμο</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeBookingForm(); });
+
+  overlay.querySelectorAll('input[name=billingType]').forEach(r=>{
+    r.addEventListener('change', ()=>{
+      document.getElementById('invoiceFields').classList.toggle('show', r.value==='invoice' && r.checked);
+    });
+  });
+
+  const terms = overlay.querySelector('#acceptTerms');
+  const submitBtn = overlay.querySelector('#submitBookingBtn');
+  terms.addEventListener('change', ()=>{ submitBtn.disabled = !terms.checked; });
+
+  // 👉 ΥΠΟΛΟΓΙΣΜΟΣ ΤΙΜΗΣ ΣΕ ΠΡΑΓΜΑΤΙΚΟ ΧΡΟΝΟ
+  // Κάθε φορά που αλλάζει ξενοδοχείο, τύπος δωματίου ή ημερομηνίες,
+  // ξαναϋπολογίζει και δείχνει το εκτιμώμενο συνολικό κόστος.
+  const hotelSel = overlay.querySelector('#hotelSelect');
+  const roomTypeSel = overlay.querySelector('select[name=roomType]');
+  const checkinInput = overlay.querySelector('input[name=checkin]');
+  const checkoutInput = overlay.querySelector('input[name=checkout]');
+  const priceValueEl = overlay.querySelector('#priceValue');
+  const priceNoteEl = overlay.querySelector('#priceNote');
+
+  function updatePrice(){
+    const { nights, perNight, total } = calcTotalPrice(
+      hotelSel.value, roomTypeSel.value, checkinInput.value, checkoutInput.value
+    );
+    if(nights > 0 && perNight > 0){
+      priceValueEl.textContent = '€' + total;
+      priceNoteEl.textContent = `${nights} διανυκτέρευση${nights>1?'εις':''} × €${perNight}/βράδυ`;
+    } else {
+      priceValueEl.textContent = '€0';
+      priceNoteEl.textContent = 'Επίλεξε ημερομηνίες, ξενοδοχείο και τύπο δωματίου';
+    }
+  }
+  [hotelSel, roomTypeSel, checkinInput, checkoutInput].forEach(el=>{
+    el.addEventListener('change', updatePrice);
+  });
+  updatePrice();
+
+  // 👉 ΕΛΕΓΧΟΣ ΕΓΚΥΡΟΤΗΤΑΣ (VALIDATION)
+  // Ελέγχει βασικά λάθη πριν επιτρέψει υποβολή: αρνητικός/υπερβολικός αριθμός
+  // ατόμων, ημερομηνία αναχώρησης πριν την άφιξη, ημερομηνία άφιξης στο παρελθόν.
+  const formErrorEl = overlay.querySelector('#formError');
+  function validateBooking(data){
+    const errors = [];
+    const guests = parseInt(data.guests, 10);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const checkinDate = new Date(data.checkin);
+    const checkoutDate = new Date(data.checkout);
+
+    if(isNaN(guests) || guests < 1){
+      errors.push('Ο αριθμός ατόμων πρέπει να είναι τουλάχιστον 1.');
+    }
+    if(guests > 6){
+      errors.push('Για πάνω από 6 άτομα, επικοινώνησε απευθείας με τη GS Travel (group booking).');
+    }
+    if(!data.checkin || !data.checkout){
+      errors.push('Συμπλήρωσε ημερομηνία άφιξης και αναχώρησης.');
+    } else {
+      if(checkinDate < today){
+        errors.push('Η ημερομηνία άφιξης δεν μπορεί να είναι στο παρελθόν.');
+      }
+      if(checkoutDate <= checkinDate){
+        errors.push('Η ημερομηνία αναχώρησης πρέπει να είναι μετά την ημερομηνία άφιξης.');
+      }
+    }
+    if(data.mobile && !/^[0-9+\s]{8,15}$/.test(data.mobile.trim())){
+      errors.push('Έλεγξε τον αριθμό κινητού (μόνο αριθμοί, +, κενά — 8 έως 15 χαρακτήρες).');
+    }
+    return errors;
+  }
+
+  overlay.querySelector('#bookingForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = Object.fromEntries(fd.entries());
+
+    // --- Validation gate: σταματάει εδώ αν κάτι δεν είναι έγκυρο ---
+    const errors = validateBooking(data);
+    if(errors.length){
+      formErrorEl.innerHTML = errors.map(m => `• ${m}`).join('<br>');
+      formErrorEl.classList.add('show');
+      formErrorEl.scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+    formErrorEl.classList.remove('show');
+
+    // Υπολογισμός τελικού ποσού βάσει hotel + roomType + διανυκτερεύσεων
+    const priceInfo = calcTotalPrice(data.hotel, data.roomType, data.checkin, data.checkout);
+    data.amount = priceInfo.total;
+    data.nights = priceInfo.nights;
+    data.pricePerNight = priceInfo.perNight;
+    data.acceptedTerms = true;
+    data.submittedAt = new Date().toISOString();
+
+    const submitBtn = document.getElementById('submitBookingBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Αποστολή...';
+
+    let saved = false;
+    try{
+      if(BOOKING_WEBHOOK_URL && BOOKING_WEBHOOK_URL !== 'PASTE_YOUR_WEBHOOK_URL_HERE'){
+        const res = await fetch(BOOKING_WEBHOOK_URL, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(data)
+        });
+        saved = res.ok;
+
+        // 👉 ΑΝΑΚΑΤΕΥΘΥΝΣΗ ΣΤΟ STRIPE
+        // Αν το workflow επέστρεψε ένα Stripe Checkout URL, πάμε εκεί
+        // κατευθείαν — ο χρήστης δεν βλέπει καν την οθόνη επιβεβαίωσης από
+        // κάτω, πάει απευθείας να πληρώσει. Η λογική summary/success view
+        // παραμένει μόνο ως fallback, για όσο δεν υπάρχει ακόμα checkoutUrl.
+        if(saved){
+          const result = await res.json();
+          if(result.checkoutUrl || result.url){
+            window.location.href = result.checkoutUrl || result.url;
+            return; // σταματάμε εδώ, δεν προλαβαίνει καν να δείξει το summary
+          }
+        }
+      }
+    }catch(err){
+      console.error('Booking submit failed:', err);
+    }
+
+    document.getElementById('summaryBox').innerHTML = `
+      <div><span>Ξενοδοχείο</span><span>${data.hotel}</span></div>
+      <div><span>Τύπος δωματίου</span><span>${data.roomType}</span></div>
+      <div><span>Ημερομηνίες</span><span>${data.checkin} → ${data.checkout}</span></div>
+      <div><span>Άτομα</span><span>${data.guests}</span></div>
+      <div><span>Συνολικό ποσό</span><span>€${data.amount}</span></div>
+      <div><span>Τιμολόγηση</span><span>${data.billingType==='invoice' ? 'Τιμολόγιο' : 'Απόδειξη'}</span></div>
+      <div><span>Payment status</span><span>Εκκρεμεί</span></div>
+      <div><span>Αποθηκεύτηκε στη βάση</span><span style="color:${saved ? '#3E9B5C' : '#D63A2E'}">${saved ? 'Ναι ✓' : 'ΟΧΙ — έλεγξε το webhook URL'}</span></div>
+    `;
+    e.target.style.display = 'none';
+    overlay.querySelector('.modal-head').style.display = 'none';
+    document.getElementById('successView').classList.add('show');
+  });
+
+  return overlay;
+}
+
+function openBookingForm(hotelName){
+  let overlay = document.getElementById('bookingOverlay');
+  if(!overlay) overlay = buildBookingModal();
+  else{
+    overlay.querySelector('#bookingForm').style.display = 'block';
+    overlay.querySelector('.modal-head').style.display = 'flex';
+    overlay.querySelector('#successView').classList.remove('show');
+    overlay.querySelector('#bookingForm').reset();
+    overlay.querySelector('#submitBookingBtn').disabled = true;
+    overlay.querySelector('#invoiceFields').classList.remove('show');
+    overlay.querySelector('#formError').classList.remove('show');
+    overlay.querySelector('#priceValue').textContent = '€0';
+    overlay.querySelector('#priceNote').textContent = 'Επίλεξε ημερομηνίες, ξενοδοχείο και τύπο δωματίου';
+  }
+  if(hotelName) overlay.querySelector('#hotelSelect').value = hotelName;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBookingForm(){
+  const overlay = document.getElementById('bookingOverlay');
+  if(overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+// 👉 ΣΗΜΕΙΟ ΛΗΞΗΣ του κομματιού "Φόρμα Κράτησης" (CSS+HTML+JS μαζί με τα 3 κουμπιά "Book Online" / "+ Νέα Κράτηση")
+
+document.querySelectorAll('.sort-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    sortKey = btn.dataset.sort;
+    render();
+  });
+});
+
+render();
+</script>
+
+</body>
+</html>
