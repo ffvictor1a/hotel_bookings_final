@@ -1,0 +1,202 @@
+import { useMemo, useState } from "react"
+import {
+  ColumnDef, flexRender, getCoreRowModel, getSortedRowModel,
+  SortingState, useReactTable,
+} from "@tanstack/react-table"
+import { ChevronUp, ChevronDown, History, ArrowUpRight, ArrowDownRight } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "../../lib/shadcn/card"
+import { Badge } from "../../lib/shadcn/badge"
+import { Skeleton } from "../../lib/shadcn/skeleton"
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "../../lib/shadcn/table"
+import type { Change } from "../data/types"
+
+function fmtDatetime(d: string) {
+  return new Date(d).toLocaleString("el-GR", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  })
+}
+
+function fmtEur(n: number) {
+  return new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(n)
+}
+
+type ChangesSectionProps = {
+  changes: Change[]
+  loading: boolean
+  /** called when user clicks the section header (to open modal if desired) */
+  onHeaderClick?: () => void
+}
+
+export default function ChangesSection({ changes, loading, onHeaderClick }: ChangesSectionProps) {
+  const [sorting, setSorting] = useState<SortingState>([{ id: "changed_at", desc: true }])
+
+  const columns = useMemo<ColumnDef<Change>[]>(() => [
+    {
+      accessorKey: "guest_name",
+      header: "Επισκέπτης",
+      cell: ({ getValue }) => (
+        <span className="font-medium text-foreground whitespace-nowrap">{getValue<string>()}</span>
+      ),
+    },
+    {
+      accessorKey: "hotel",
+      header: "Ξενοδοχείο",
+      cell: ({ getValue }) => (
+        <span className="whitespace-nowrap text-muted-foreground">{getValue<string>()}</span>
+      ),
+    },
+    {
+      accessorKey: "changed_by",
+      header: "Χρήστης",
+      cell: ({ getValue }) => (
+        <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">
+          {getValue<string>()}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "changed_at",
+      header: "Ημ/νία",
+      cell: ({ getValue }) => (
+        <span className="whitespace-nowrap text-sm text-muted-foreground">
+          {fmtDatetime(getValue<string>())}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "change_description",
+      header: "Περιγραφή",
+      cell: ({ getValue }) => (
+        <span className="text-sm text-foreground">{getValue<string>()}</span>
+      ),
+    },
+    {
+      accessorKey: "old_value",
+      header: "Παλιά Τιμή",
+      cell: ({ getValue }) => (
+        <span className="text-xs text-muted-foreground line-through decoration-muted-foreground/50">
+          {getValue<string>()}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "new_value",
+      header: "Νέα Τιμή",
+      cell: ({ getValue }) => (
+        <span className="text-xs font-medium text-foreground">{getValue<string>()}</span>
+      ),
+    },
+    {
+      accessorKey: "amount_delta",
+      header: "Διαφορά €",
+      cell: ({ getValue, row }) => {
+        const delta = getValue<number>()
+        const c = row.original
+        return (
+          <div className="flex items-center gap-1.5 whitespace-nowrap">
+            <span className={`text-sm font-semibold tabular-nums ${
+              delta > 0 ? "text-emerald-600 dark:text-emerald-400"
+              : delta < 0 ? "text-red-600 dark:text-red-400"
+              : "text-muted-foreground"
+            }`}>
+              {delta > 0 ? "+" : ""}{fmtEur(delta)}
+            </span>
+            {c.requires_payment === "yes" && (
+              <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-700 flex items-center gap-0.5">
+                <ArrowUpRight className="w-2.5 h-2.5" />Πληρωμή
+              </Badge>
+            )}
+            {c.requires_refund === "yes" && (
+              <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-700 flex items-center gap-0.5">
+                <ArrowDownRight className="w-2.5 h-2.5" />Επιστροφή
+              </Badge>
+            )}
+          </div>
+        )
+      },
+    },
+  ], [])
+
+  const table = useReactTable({
+    data: changes,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <History className="w-4 h-4 text-muted-foreground" />
+            <CardTitle className="text-base font-semibold">Λίστα Αλλαγών</CardTitle>
+          </div>
+          {onHeaderClick && (
+            <button
+              onClick={onHeaderClick}
+              className="text-xs text-primary hover:underline font-medium"
+            >
+              Προβολή όλων
+            </button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="px-0 pb-0">
+        {loading ? (
+          <div className="space-y-2 px-6 pb-6">
+            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((hg) => (
+                  <TableRow key={hg.id} className="hover:bg-transparent border-b border-border">
+                    {hg.headers.map((h) => (
+                      <TableHead
+                        key={h.id}
+                        className="px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap cursor-pointer select-none"
+                        onClick={h.column.getToggleSortingHandler()}
+                      >
+                        <div className="flex items-center gap-1">
+                          {flexRender(h.column.columnDef.header, h.getContext())}
+                          {h.column.getIsSorted() === "asc"  && <ChevronUp className="w-3 h-3" />}
+                          {h.column.getIsSorted() === "desc" && <ChevronDown className="w-3 h-3" />}
+                        </div>
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="py-10 text-center text-sm text-muted-foreground">
+                      Δεν υπάρχουν αλλαγές.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id} className="hover:bg-muted/40 transition-colors">
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className="px-5 py-3 text-sm">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
