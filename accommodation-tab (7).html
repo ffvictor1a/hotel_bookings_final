@@ -871,6 +871,8 @@ function buildBookingModal(){
     submitBtn.textContent = 'Αποστολή...';
 
     let saved = false;
+    let waitlisted = false;
+    let waitlistMessage = '';
     try{
       if(BOOKING_WEBHOOK_URL && BOOKING_WEBHOOK_URL !== 'PASTE_YOUR_WEBHOOK_URL_HERE'){
         const res = await fetch(BOOKING_WEBHOOK_URL, {
@@ -880,16 +882,25 @@ function buildBookingModal(){
         });
         saved = res.ok;
 
-        // 👉 ΑΝΑΚΑΤΕΥΘΥΝΣΗ ΣΤΟ STRIPE
-        // Αν το workflow επέστρεψε ένα Stripe Checkout URL, πάμε εκεί
-        // κατευθείαν — ο χρήστης δεν βλέπει καν την οθόνη επιβεβαίωσης από
-        // κάτω, πάει απευθείας να πληρώσει. Η λογική summary/success view
-        // παραμένει μόνο ως fallback, για όσο δεν υπάρχει ακόμα checkoutUrl.
         if(saved){
           const result = await res.json();
+
+          // 👉 ΑΝΑΚΑΤΕΥΘΥΝΣΗ ΣΤΟ STRIPE
+          // Αν το workflow επέστρεψε ένα Stripe Checkout URL, πάμε εκεί
+          // κατευθείαν — ο χρήστης δεν βλέπει καν την οθόνη επιβεβαίωσης από
+          // κάτω, πάει απευθείας να πληρώσει.
           if(result.checkoutUrl || result.url){
             window.location.href = result.checkoutUrl || result.url;
             return; // σταματάμε εδώ, δεν προλαβαίνει καν να δείξει το summary
+          }
+
+          // 👉 SOLD OUT / WAITLIST
+          // Αν το δωμάτιο ήταν sold out, το workflow δεν έστειλε καθόλου
+          // checkoutUrl — έστειλε αντ' αυτού waitlisted:true + μήνυμα.
+          // Δεν κάνουμε redirect, δείχνουμε το μήνυμα στην οθόνη επιβεβαίωσης.
+          if(result.waitlisted){
+            waitlisted = true;
+            waitlistMessage = result.message || 'Αυτός ο τύπος δωματίου έχει εξαντληθεί. Μπήκατε σε λίστα αναμονής.';
           }
         }
       }
@@ -897,16 +908,39 @@ function buildBookingModal(){
       console.error('Booking submit failed:', err);
     }
 
-    document.getElementById('summaryBox').innerHTML = `
-      <div><span>Ξενοδοχείο</span><span>${data.hotel}</span></div>
-      <div><span>Τύπος δωματίου</span><span>${data.roomType}</span></div>
-      <div><span>Ημερομηνίες</span><span>${data.checkin} → ${data.checkout}</span></div>
-      <div><span>Άτομα</span><span>${data.guests}</span></div>
-      <div><span>Συνολικό ποσό</span><span>€${data.amount}</span></div>
-      <div><span>Τιμολόγηση</span><span>${data.billingType==='invoice' ? 'Τιμολόγιο' : 'Απόδειξη'}</span></div>
-      <div><span>Payment status</span><span>Εκκρεμεί</span></div>
-      <div><span>Αποθηκεύτηκε στη βάση</span><span style="color:${saved ? '#3E9B5C' : '#D63A2E'}">${saved ? 'Ναι ✓' : 'ΟΧΙ — έλεγξε το webhook URL'}</span></div>
-    `;
+    // 👉 Το περιεχόμενο της οθόνης επιβεβαίωσης αλλάζει ανάλογα αν η κράτηση
+    // πέρασε κανονικά ή μπήκε σε λίστα αναμονής (sold out).
+    if(waitlisted){
+      document.getElementById('summaryBox').innerHTML = `
+        <div><span>Ξενοδοχείο</span><span>${data.hotel}</span></div>
+        <div><span>Τύπος δωματίου</span><span>${data.roomType}</span></div>
+        <div><span>Ημερομηνίες</span><span>${data.checkin} → ${data.checkout}</span></div>
+        <div><span>Κατάσταση</span><span style="color:#B8801E">Λίστα αναμονής</span></div>
+      `;
+      overlay.querySelector('#successView .check').innerHTML =
+        '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#B8801E" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>';
+      overlay.querySelector('#successView .check').style.background = 'var(--amber-bg)';
+      overlay.querySelector('#successView h3').textContent = 'Το δωμάτιο δεν είναι διαθέσιμο';
+      overlay.querySelector('#successView p').textContent = waitlistMessage;
+    } else {
+      // reset σε κανονική εμφάνιση (πράσινο check) σε περίπτωση που το modal
+      // είχε δείξει προηγουμένως waitlist μήνυμα σε άλλη κράτηση
+      overlay.querySelector('#successView .check').innerHTML =
+        '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#3E9B5C" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>';
+      overlay.querySelector('#successView .check').style.background = 'var(--green-bg)';
+      overlay.querySelector('#successView h3').textContent = 'Η κράτησή σας καταχωρήθηκε';
+      overlay.querySelector('#successView p').textContent = 'Θα λάβετε email επιβεβαίωσης με τα στοιχεία της κράτησης και το payment status.';
+      document.getElementById('summaryBox').innerHTML = `
+        <div><span>Ξενοδοχείο</span><span>${data.hotel}</span></div>
+        <div><span>Τύπος δωματίου</span><span>${data.roomType}</span></div>
+        <div><span>Ημερομηνίες</span><span>${data.checkin} → ${data.checkout}</span></div>
+        <div><span>Άτομα</span><span>${data.guests}</span></div>
+        <div><span>Συνολικό ποσό</span><span>€${data.amount}</span></div>
+        <div><span>Τιμολόγηση</span><span>${data.billingType==='invoice' ? 'Τιμολόγιο' : 'Απόδειξη'}</span></div>
+        <div><span>Payment status</span><span>Εκκρεμεί</span></div>
+        <div><span>Αποθηκεύτηκε στη βάση</span><span style="color:${saved ? '#3E9B5C' : '#D63A2E'}">${saved ? 'Ναι ✓' : 'ΟΧΙ — έλεγξε το webhook URL'}</span></div>
+      `;
+    }
     e.target.style.display = 'none';
     overlay.querySelector('.modal-head').style.display = 'none';
     document.getElementById('successView').classList.add('show');

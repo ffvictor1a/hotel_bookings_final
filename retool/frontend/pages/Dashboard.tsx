@@ -35,7 +35,8 @@ const STATUS_CFG = {
   paid:      { label: "Πληρωμένη",   cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700" },
   confirmed: { label: "Επιβεβαιωμένη", cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-700" },
   pending:   { label: "Εκκρεμής",    cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700" },
-  cancelled: { label: "Ακυρωμένη",  cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700" },
+  cancelled:  { label: "Ακυρωμένη",  cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700" },
+  waitlisted: { label: "Λίστα Αναμονής", cls: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-700" },
 }
 
 function nightCount(checkin: string | null, checkout: string | null): number {
@@ -348,12 +349,14 @@ export default function Dashboard() {
     const confirmed = bookings.filter((b) => b.status === "confirmed")
     const pending   = bookings.filter((b) => b.status === "pending")
     const cancelled = bookings.filter((b) => b.status === "cancelled")
+    const nonWaitlisted = bookings.filter((b) => b.status !== "waitlisted")
     const revenue   = [...paid, ...confirmed].reduce((s, b) => s + calcAmount(b), 0)
     const pendingChanges = changes.filter(
       (c) => c.requires_payment === "yes" || c.requires_refund === "yes"
     )
     return {
-      total: bookings.length,
+      total: nonWaitlisted.length,
+      nonWaitlisted,
       revenue,
       paid,
       confirmed,
@@ -406,7 +409,7 @@ export default function Dashboard() {
             icon={<Hotel className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
             iconBg="bg-blue-100 dark:bg-blue-900/30"
             loading={bLoading}
-            onClick={() => openBookingModal("Σύνολο Κρατήσεων", bookings)}
+            onClick={() => openBookingModal("Σύνολο Κρατήσεων", kpis.nonWaitlisted)}
           />
           <KpiCard
             title="Συνολικά Έσοδα"
