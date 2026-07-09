@@ -20,7 +20,7 @@ import {
 import { Skeleton } from "../lib/shadcn/skeleton"
 
 import { useGetBookings, useCancelBooking } from "../hooks/backend/bookings"
-import { useGetAllotments } from "../hooks/backend/allotments"
+import { useGetAvailability } from "../hooks/backend/allotments"
 import { useGetChanges } from "../hooks/backend/changes"
 
 import AllotmentsSection from "./ui/AllotmentsSection"
@@ -29,7 +29,7 @@ import ChangesSection from "./ui/ChangesSection"
 import DataModal, { type ModalState } from "./ui/DataModal"
 import ManualBookingModal from "./ui/ManualBookingModal"
 
-import type { Booking, Allotment, Change } from "./data/types"
+import type { Booking, AvailabilityRow, Change } from "./data/types"
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 const STATUS_CFG = {
@@ -396,16 +396,16 @@ function BookingsTable({
 // ── Dashboard (main) ──────────────────────────────────────────────────────────
 export default function Dashboard() {
   const { data: bData, loading: bLoading, error: bError, trigger: bTrigger } = useGetBookings()
-  const { data: aData, loading: aLoading, trigger: aTrigger } = useGetAllotments()
+  const { data: aData, loading: aLoading, trigger: aTrigger } = useGetAvailability()
   const { data: cData, loading: cLoading, error: cError, trigger: cTrigger } = useGetChanges()
 
   useEffect(() => { bTrigger() }, [])
   useEffect(() => { aTrigger() }, [])
   useEffect(() => { cTrigger() }, [])
 
-  const bookings   = (bData as Booking[]   | undefined) ?? []
-  const allotments = (aData as Allotment[] | undefined) ?? []
-  const changes    = (cData as Change[]    | undefined) ?? []
+  const bookings      = (bData as Booking[]          | undefined) ?? []
+  const availability  = (aData as AvailabilityRow[]  | undefined) ?? []
+  const changes       = (cData as Change[]           | undefined) ?? []
 
   // ── KPI derivations ──────────────────────────────────────────────────────
   const kpis = useMemo(() => {
@@ -537,7 +537,7 @@ export default function Dashboard() {
         />
 
         {/* ── Allotments ───────────────────────────────────────────────── */}
-        <AllotmentsSection allotments={allotments} loading={aLoading} />
+        <AllotmentsSection rows={availability} loading={aLoading} />
 
         {/* ── Changes ─────────────────────────────────────────────────── */}
         <ChangesSection

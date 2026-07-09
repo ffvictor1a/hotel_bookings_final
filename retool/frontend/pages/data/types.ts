@@ -23,6 +23,14 @@ export type Allotment = {
   deadline: string
 }
 
+export type AvailabilityRow = {
+  hotel: string
+  room_type: string
+  total_allotment: number
+  booked_count: number
+  available: number
+}
+
 export type Change = {
   id: number
   change_id: string

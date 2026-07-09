@@ -2,7 +2,7 @@ import { useMemo } from "react"
 import { BedDouble } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../lib/shadcn/card"
 import { Skeleton } from "../../lib/shadcn/skeleton"
-import type { Allotment } from "../data/types"
+import type { AvailabilityRow } from "../data/types"
 
 function ProgressBar({ pct }: { pct: number }) {
   const color =
@@ -39,20 +39,20 @@ function RemainingBadge({ remaining, total }: { remaining: number; total: number
 }
 
 type AllotmentsSectionProps = {
-  allotments: Allotment[]
+  rows: AvailabilityRow[]
   loading: boolean
 }
 
-export default function AllotmentsSection({ allotments, loading }: AllotmentsSectionProps) {
+export default function AllotmentsSection({ rows, loading }: AllotmentsSectionProps) {
   // Group by hotel
   const byHotel = useMemo(() => {
-    const map: Record<string, Allotment[]> = {}
-    for (const a of allotments) {
-      if (!map[a.hotel]) map[a.hotel] = []
-      map[a.hotel]!.push(a)
+    const map: Record<string, AvailabilityRow[]> = {}
+    for (const r of rows) {
+      if (!map[r.hotel]) map[r.hotel] = []
+      map[r.hotel]!.push(r)
     }
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b))
-  }, [allotments])
+  }, [rows])
 
   return (
     <section>
@@ -74,35 +74,33 @@ export default function AllotmentsSection({ allotments, loading }: AllotmentsSec
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {byHotel.map(([hotel, rows]) => {
-            const hotelTotal = rows.reduce((s, r) => s + r.total_allotment, 0)
-            const hotelConfirmed = rows.reduce((s, r) => s + r.confirmed_bookings, 0)
-            const hotelRemaining = hotelTotal - hotelConfirmed
+          {byHotel.map(([hotel, hotelRows]) => {
+            const hotelTotal = hotelRows.reduce((s, r) => s + r.total_allotment, 0)
+            const hotelAvailable = hotelRows.reduce((s, r) => s + r.available, 0)
 
             return (
               <Card key={hotel} className="overflow-hidden">
                 <CardHeader className="pb-2 pt-4 px-5">
                   <CardTitle className="text-sm font-semibold leading-snug">{hotel}</CardTitle>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {hotelRemaining} από {hotelTotal} διαθέσιμα δωμάτια
+                    {hotelAvailable} από {hotelTotal} διαθέσιμα δωμάτια
                   </p>
                 </CardHeader>
                 <CardContent className="px-5 pb-4 space-y-3">
-                  {rows.map((a) => {
-                    const remaining = a.total_allotment - a.confirmed_bookings
-                    const pct = a.total_allotment > 0
-                      ? Math.round((a.confirmed_bookings / a.total_allotment) * 100)
+                  {hotelRows.map((r) => {
+                    const pct = r.total_allotment > 0
+                      ? Math.round((r.booked_count / r.total_allotment) * 100)
                       : 100
 
                     return (
-                      <div key={a.id} className="space-y-1.5">
+                      <div key={`${r.hotel}-${r.room_type}`} className="space-y-1.5">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-medium text-foreground">{a.room_type}</span>
+                          <span className="text-xs font-medium text-foreground">{r.room_type}</span>
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="text-xs text-muted-foreground tabular-nums">
-                              {a.confirmed_bookings}/{a.total_allotment}
+                              {r.booked_count}/{r.total_allotment}
                             </span>
-                            <RemainingBadge remaining={remaining} total={a.total_allotment} />
+                            <RemainingBadge remaining={r.available} total={r.total_allotment} />
                           </div>
                         </div>
                         <ProgressBar pct={pct} />
