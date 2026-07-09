@@ -13,6 +13,7 @@ const STATUS_CFG = {
   pending:   { label: "Εκκρεμής",    cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700" },
   cancelled:  { label: "Ακυρωμένη",  cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700" },
   waitlisted: { label: "Λίστα Αναμονής", cls: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-700" },
+  hosted:     { label: "Hosted",          cls: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-700" },
 }
 
 function nightCount(checkin: string | null, checkout: string | null): number {
@@ -56,7 +57,7 @@ function BookingsTable({ rows }: { rows: Booking[] }) {
       </TableHeader>
       <TableBody>
         {rows.map((b) => {
-          const sc = STATUS_CFG[b.status]
+          const sc = STATUS_CFG[b.status] ?? { label: b.status ?? "—", cls: "bg-muted text-muted-foreground border-border" }
           return (
             <TableRow key={b.id} className="hover:bg-muted/40">
               <TableCell className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{b.id}</TableCell>

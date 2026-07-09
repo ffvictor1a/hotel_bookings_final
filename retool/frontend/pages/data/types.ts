@@ -6,7 +6,7 @@ export type Booking = {
   checkin: string | null
   checkout: string | null
   price_per_night: number | null
-  status: "paid" | "pending" | "cancelled" | "confirmed" | "waitlisted"
+  status: "paid" | "pending" | "cancelled" | "confirmed" | "waitlisted" | "hosted"
   email: string | null
   mobile: string | null
   guests: number | null

@@ -8,7 +8,7 @@ import {
 } from "recharts"
 import {
   Hotel, BadgeDollarSign, CheckCircle2, Clock, XCircle,
-  ChevronUp, ChevronDown, Search, AlertTriangle,
+  ChevronUp, ChevronDown, Search, AlertTriangle, Plus,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../lib/shadcn/card"
 import { Badge } from "../lib/shadcn/badge"
@@ -27,6 +27,7 @@ import AllotmentsSection from "./ui/AllotmentsSection"
 import ReportsTab from "./ReportsTab"
 import ChangesSection from "./ui/ChangesSection"
 import DataModal, { type ModalState } from "./ui/DataModal"
+import ManualBookingModal from "./ui/ManualBookingModal"
 
 import type { Booking, Allotment, Change } from "./data/types"
 
@@ -37,6 +38,7 @@ const STATUS_CFG = {
   pending:   { label: "Εκκρεμής",    cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700" },
   cancelled:  { label: "Ακυρωμένη",  cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700" },
   waitlisted: { label: "Λίστα Αναμονής", cls: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-700" },
+  hosted:     { label: "Hosted",          cls: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-700" },
 }
 
 function nightCount(checkin: string | null, checkout: string | null): number {
@@ -221,8 +223,8 @@ function BookingsTable({ data, loading }: { data: Booking[]; loading: boolean })
       accessorKey: "status",
       header: "Κατάσταση",
       cell: ({ getValue }) => {
-        const s = getValue<keyof typeof STATUS_CFG>()
-        const c = STATUS_CFG[s]
+        const s = getValue<string>()
+        const c = STATUS_CFG[s as keyof typeof STATUS_CFG] ?? { label: s ?? "—", cls: "bg-muted text-muted-foreground border-border" }
         return <Badge variant="outline" className={`text-xs font-medium ${c.cls}`}>{c.label}</Badge>
       },
     },
@@ -368,6 +370,7 @@ export default function Dashboard() {
 
   // ── Modal state ──────────────────────────────────────────────────────────
   const [modal, setModal] = useState<ModalState | null>(null)
+  const [manualBookingOpen, setManualBookingOpen] = useState(false)
 
   function openBookingModal(title: string, rows: Booking[]) {
     setModal({ kind: "bookings", title, rows })
@@ -383,14 +386,20 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <header className="border-b border-border bg-card">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Hotel className="w-6 h-6 text-primary" />
+        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Hotel className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground leading-tight">Hotel Bookings</h1>
+              <p className="text-xs text-muted-foreground">Admin Dashboard</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground leading-tight">Hotel Bookings</h1>
-            <p className="text-xs text-muted-foreground">Admin Dashboard</p>
-          </div>
+          <Button onClick={() => setManualBookingOpen(true)} className="gap-2 shrink-0">
+            <Plus className="w-4 h-4" />
+            Χειροκίνητη Κράτηση
+          </Button>
         </div>
       </header>
 
@@ -484,6 +493,13 @@ export default function Dashboard() {
 
       {/* ── Detail Modal ─────────────────────────────────────────────── */}
       <DataModal state={modal} onClose={() => setModal(null)} />
+
+      {/* ── Manual Booking Modal ─────────────────────────────────────── */}
+      <ManualBookingModal
+        open={manualBookingOpen}
+        onClose={() => setManualBookingOpen(false)}
+        onSuccess={() => { bTrigger({ skipCache: true }); aTrigger({ skipCache: true }) }}
+      />
     </div>
   )
 }
