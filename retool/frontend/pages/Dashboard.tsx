@@ -8,7 +8,7 @@ import {
 } from "recharts"
 import {
   Hotel, BadgeDollarSign, CheckCircle2, Clock, XCircle,
-  ChevronUp, ChevronDown, Search, AlertTriangle, Plus,
+  ChevronUp, ChevronDown, Search, AlertTriangle, Plus, Ban,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../lib/shadcn/card"
 import { Badge } from "../lib/shadcn/badge"
@@ -19,7 +19,7 @@ import {
 } from "../lib/shadcn/table"
 import { Skeleton } from "../lib/shadcn/skeleton"
 
-import { useGetBookings } from "../hooks/backend/bookings"
+import { useGetBookings, useCancelBooking } from "../hooks/backend/bookings"
 import { useGetAllotments } from "../hooks/backend/allotments"
 import { useGetChanges } from "../hooks/backend/changes"
 
@@ -183,9 +183,20 @@ function BookingsBarChart({ data, loading, onHotelClick }: BarChartProps) {
 }
 
 // ── Bookings Table ────────────────────────────────────────────────────────────
-function BookingsTable({ data, loading }: { data: Booking[]; loading: boolean }) {
+function BookingsTable({
+  data,
+  loading,
+  onCancelSuccess,
+}: {
+  data: Booking[]
+  loading: boolean
+  onCancelSuccess: () => void
+}) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState("")
+  const [cancellingId, setCancellingId] = useState<number | null>(null)
+  const [confirmId, setConfirmId] = useState<number | null>(null)
+  const { trigger: cancelBooking } = useCancelBooking()
 
   const columns = useMemo<ColumnDef<Booking>[]>(() => [
     {
@@ -228,7 +239,58 @@ function BookingsTable({ data, loading }: { data: Booking[]; loading: boolean })
         return <Badge variant="outline" className={`text-xs font-medium ${c.cls}`}>{c.label}</Badge>
       },
     },
-  ], [])
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => {
+        const b = row.original
+        if (b.status === "cancelled") return null
+        if (confirmId === b.id) {
+          return (
+            <div className="flex items-center gap-1 whitespace-nowrap">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-7 text-xs px-2"
+                disabled={cancellingId === b.id}
+                onClick={async () => {
+                  setCancellingId(b.id)
+                  setConfirmId(null)
+                  try {
+                    await cancelBooking({ booking_id: b.id })
+                    onCancelSuccess()
+                  } finally {
+                    setCancellingId(null)
+                  }
+                }}
+              >
+                {cancellingId === b.id ? "..." : "Ναι, ακύρωση"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs px-2"
+                onClick={() => setConfirmId(null)}
+              >
+                Όχι
+              </Button>
+            </div>
+          )
+        }
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            onClick={() => setConfirmId(b.id)}
+          >
+            <Ban className="w-3.5 h-3.5 mr-1" />
+            Ακύρωση
+          </Button>
+        )
+      },
+    },
+  ], [confirmId, cancellingId, cancelBooking, onCancelSuccess])
 
   const table = useReactTable({
     data: data ?? [],
@@ -485,7 +547,11 @@ export default function Dashboard() {
         />
 
         {/* ── All Bookings Table ───────────────────────────────────────── */}
-        <BookingsTable data={bookings} loading={bLoading} />
+        <BookingsTable
+          data={bookings}
+          loading={bLoading}
+          onCancelSuccess={() => { bTrigger({ skipCache: true }); cTrigger({ skipCache: true }) }}
+        />
 
         {/* ── Reports Tabs ─────────────────────────────────────────────── */}
         <ReportsTab />

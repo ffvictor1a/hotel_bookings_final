@@ -9,12 +9,11 @@ export type ChangeReportRow = {
   new_value: string | null
   amount_delta: number | null
 }
-
 export default async function (_req: { params: Record<string, never>; user: User }) {
   const result = await retoolDb.query<ChangeReportRow>(
     `SELECT booking_id, guest_name, hotel, changed_by, changed_at,
             change_description, old_value, new_value, amount_delta
-     FROM "paymentStatus"
+     FROM "changes"
      ORDER BY changed_at DESC`
   )
   return result.data
