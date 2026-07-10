@@ -1,5 +1,6 @@
 export default {
-  async fetch(request) {
+  // 1ο ΛΑΘΟΣ: Προσθέσαμε το 'env' εδώ για να έχει πρόσβαση ο Worker στα Variables σου
+  async fetch(request, env) {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -16,7 +17,8 @@ export default {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Workflow-Api-Key': 'retool_wk_778f0f9d8f6547aa9a990cdbd23b1759'
+        // 2ο ΛΑΘΟΣ: Βγάλαμε τα εισαγωγικά και βάλαμε το env.RETOOL_API_KEY_2
+        'X-Workflow-Api-Key': env.RETOOL_API_KEY_2
       },
       body
     });
