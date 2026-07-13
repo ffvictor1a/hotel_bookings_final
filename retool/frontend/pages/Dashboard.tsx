@@ -8,7 +8,7 @@ import {
 } from "recharts"
 import {
   Hotel, BadgeDollarSign, CheckCircle2, Clock, XCircle,
-  ChevronUp, ChevronDown, Search, AlertTriangle, Plus, Ban,
+  ChevronUp, ChevronDown, Search, AlertTriangle, Plus, Ban, Pencil,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../lib/shadcn/card"
 import { Badge } from "../lib/shadcn/badge"
@@ -28,6 +28,7 @@ import ReportsTab from "./ReportsTab"
 import ChangesSection from "./ui/ChangesSection"
 import DataModal, { type ModalState } from "./ui/DataModal"
 import ManualBookingModal from "./ui/ManualBookingModal"
+import ChangeBookingModal from "./ui/ChangeBookingModal"
 
 import type { Booking, AvailabilityRow, Change } from "./data/types"
 
@@ -39,15 +40,6 @@ const STATUS_CFG = {
   cancelled:  { label: "Ακυρωμένη",  cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700" },
   waitlisted: { label: "Λίστα Αναμονής", cls: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-700" },
   hosted:     { label: "Hosted",          cls: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-700" },
-}
-
-function nightCount(checkin: string | null, checkout: string | null): number {
-  if (!checkin || !checkout) return 0
-  return Math.max(0, Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / 86_400_000))
-}
-
-function calcAmount(b: Booking): number {
-  return (b.price_per_night ?? 0) * nightCount(b.checkin, b.checkout)
 }
 
 function fmtEur(n: number) {
@@ -187,10 +179,12 @@ function BookingsTable({
   data,
   loading,
   onCancelSuccess,
+  onEditBooking,
 }: {
   data: Booking[]
   loading: boolean
   onCancelSuccess: () => void
+  onEditBooking: (booking: Booking) => void
 }) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState("")
@@ -212,7 +206,7 @@ function BookingsTable({
     {
       accessorKey: "room_type",
       header: "Τύπος Δωματίου",
-      cell: ({ getValue }) => <span className="whitespace-nowrap">{getValue<string>()}</span>,
+      cell: ({ getValue }) => <span className="whitespace-nowrap">{getValue<string | null>() ?? "—"}</span>,
     },
     {
       accessorKey: "checkin",
@@ -225,10 +219,14 @@ function BookingsTable({
       cell: ({ getValue }) => { const v = getValue<string | null>(); return <span className="whitespace-nowrap">{v ? fmtDate(v) : "—"}</span> },
     },
     {
-      id: "amount",
+      // Direct from DB — no recalculation
+      accessorKey: "amount",
       header: "Ποσό",
-      accessorFn: (row) => calcAmount(row),
-      cell: ({ getValue }) => <span className="font-semibold tabular-nums whitespace-nowrap">{fmtEur(getValue<number>())}</span>,
+      cell: ({ getValue }) => (
+        <span className="font-semibold tabular-nums whitespace-nowrap">
+          {fmtEur(getValue<number | null>() ?? 0)}
+        </span>
+      ),
     },
     {
       accessorKey: "status",
@@ -244,7 +242,8 @@ function BookingsTable({
       header: "",
       cell: ({ row }) => {
         const b = row.original
-        if (b.status === "cancelled") return null
+
+        // Confirmation mode for cancel
         if (confirmId === b.id) {
           return (
             <div className="flex items-center gap-1 whitespace-nowrap">
@@ -277,20 +276,37 @@ function BookingsTable({
             </div>
           )
         }
+
         return (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            onClick={() => setConfirmId(b.id)}
-          >
-            <Ban className="w-3.5 h-3.5 mr-1" />
-            Ακύρωση
-          </Button>
+          <div className="flex items-center gap-1 whitespace-nowrap">
+            {/* Αλλαγή button — always visible */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs px-2 text-muted-foreground hover:text-primary hover:bg-primary/10"
+              onClick={() => onEditBooking(b)}
+            >
+              <Pencil className="w-3.5 h-3.5 mr-1" />
+              Αλλαγή
+            </Button>
+
+            {/* Ακύρωση button — only for non-cancelled */}
+            {b.status !== "cancelled" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setConfirmId(b.id)}
+              >
+                <Ban className="w-3.5 h-3.5 mr-1" />
+                Ακύρωση
+              </Button>
+            )}
+          </div>
         )
       },
     },
-  ], [confirmId, cancellingId, cancelBooking, onCancelSuccess])
+  ], [confirmId, cancellingId, cancelBooking, onCancelSuccess, onEditBooking])
 
   const table = useReactTable({
     data: data ?? [],
@@ -409,12 +425,19 @@ export default function Dashboard() {
 
   // ── KPI derivations ──────────────────────────────────────────────────────
   const kpis = useMemo(() => {
-    const paid      = bookings.filter((b) => b.status === "paid")
-    const confirmed = bookings.filter((b) => b.status === "confirmed")
-    const pending   = bookings.filter((b) => b.status === "pending")
-    const cancelled = bookings.filter((b) => b.status === "cancelled")
+    const paid        = bookings.filter((b) => b.status === "paid")
+    const confirmed   = bookings.filter((b) => b.status === "confirmed")
+    const pending     = bookings.filter((b) => b.status === "pending")
+    const cancelled   = bookings.filter((b) => b.status === "cancelled")
     const nonWaitlisted = bookings.filter((b) => b.status !== "waitlisted")
-    const revenue   = [...paid, ...confirmed].reduce((s, b) => s + calcAmount(b), 0)
+
+    // Revenue = sum of stored amounts for active (paid + confirmed) bookings.
+    // This automatically reflects:
+    //   • New bookings  → new rows appear after bTrigger refresh
+    //   • Cancellations → cancelled status excluded from filter
+    //   • Changes       → updateBooking writes new amount to DB; reflected after refresh
+    const revenue = [...paid, ...confirmed].reduce((s, b) => s + (b.amount ?? 0), 0)
+
     const pendingChanges = changes.filter(
       (c) => c.requires_payment === "yes" || c.requires_refund === "yes"
     )
@@ -433,6 +456,7 @@ export default function Dashboard() {
   // ── Modal state ──────────────────────────────────────────────────────────
   const [modal, setModal] = useState<ModalState | null>(null)
   const [manualBookingOpen, setManualBookingOpen] = useState(false)
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null)
 
   function openBookingModal(title: string, rows: Booking[]) {
     setModal({ kind: "bookings", title, rows })
@@ -440,6 +464,12 @@ export default function Dashboard() {
 
   function openChangesModal(title: string, rows: Change[]) {
     setModal({ kind: "changes", title, rows })
+  }
+
+  function refreshAll() {
+    bTrigger(undefined, { skipCache: true })
+    cTrigger(undefined, { skipCache: true })
+    aTrigger(undefined, { skipCache: true })
   }
 
   const anyError = bError || cError
@@ -550,7 +580,8 @@ export default function Dashboard() {
         <BookingsTable
           data={bookings}
           loading={bLoading}
-          onCancelSuccess={() => { bTrigger({ skipCache: true }); cTrigger({ skipCache: true }) }}
+          onCancelSuccess={refreshAll}
+          onEditBooking={(b) => setEditingBooking(b)}
         />
 
         {/* ── Reports Tabs ─────────────────────────────────────────────── */}
@@ -564,7 +595,15 @@ export default function Dashboard() {
       <ManualBookingModal
         open={manualBookingOpen}
         onClose={() => setManualBookingOpen(false)}
-        onSuccess={() => { bTrigger({ skipCache: true }); aTrigger({ skipCache: true }) }}
+        onSuccess={refreshAll}
+      />
+
+      {/* ── Change Booking Modal ─────────────────────────────────────── */}
+      <ChangeBookingModal
+        open={editingBooking !== null}
+        booking={editingBooking}
+        onClose={() => setEditingBooking(null)}
+        onSuccess={refreshAll}
       />
     </div>
   )

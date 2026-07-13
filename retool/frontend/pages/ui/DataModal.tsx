@@ -1,4 +1,3 @@
-import { X } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../lib/shadcn/dialog"
 import { Badge } from "../../lib/shadcn/badge"
 import {
@@ -14,15 +13,6 @@ const STATUS_CFG = {
   cancelled:  { label: "Ακυρωμένη",  cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700" },
   waitlisted: { label: "Λίστα Αναμονής", cls: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-700" },
   hosted:     { label: "Hosted",          cls: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-700" },
-}
-
-function nightCount(checkin: string | null, checkout: string | null): number {
-  if (!checkin || !checkout) return 0
-  return Math.max(0, Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / 86_400_000))
-}
-
-function calcAmount(b: Booking): number {
-  return (b.price_per_night ?? 0) * nightCount(b.checkin, b.checkout)
 }
 
 function fmtDate(d: string) {
@@ -66,7 +56,7 @@ function BookingsTable({ rows }: { rows: Booking[] }) {
               <TableCell className="px-4 py-2.5 text-sm whitespace-nowrap text-muted-foreground">{b.room_type ?? "—"}</TableCell>
               <TableCell className="px-4 py-2.5 text-sm whitespace-nowrap text-muted-foreground">{b.checkin ? fmtDate(b.checkin) : "—"}</TableCell>
               <TableCell className="px-4 py-2.5 text-sm whitespace-nowrap text-muted-foreground">{b.checkout ? fmtDate(b.checkout) : "—"}</TableCell>
-              <TableCell className="px-4 py-2.5 text-sm font-semibold tabular-nums whitespace-nowrap">{fmtEur(calcAmount(b))}</TableCell>
+              <TableCell className="px-4 py-2.5 text-sm font-semibold tabular-nums whitespace-nowrap">{fmtEur(b.amount ?? 0)}</TableCell>
               <TableCell className="px-4 py-2.5">
                 <Badge variant="outline" className={`text-xs ${sc.cls}`}>{sc.label}</Badge>
               </TableCell>
@@ -135,19 +125,14 @@ export default function DataModal({ state, onClose }: DataModalProps) {
   return (
     <Dialog open={state !== null} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent className="max-w-5xl w-full p-0 gap-0 overflow-hidden">
-        <DialogHeader className="px-6 py-4 border-b border-border flex flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+        {/* The shadcn DialogContent already renders a built-in close (X) button */}
+        <DialogHeader className="px-6 py-4 border-b border-border">
+          <div className="flex items-center gap-3 min-w-0 pr-8">
             <DialogTitle className="text-base font-semibold truncate">{state?.title}</DialogTitle>
             <span className="shrink-0 text-xs font-medium bg-muted text-muted-foreground rounded-full px-2.5 py-0.5">
               {count} {count === 1 ? "εγγραφή" : "εγγραφές"}
             </span>
           </div>
-          <button
-            onClick={onClose}
-            className="shrink-0 text-muted-foreground hover:text-foreground transition-colors rounded-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </DialogHeader>
         <div className="overflow-auto max-h-[65vh]">
           {state?.kind === "bookings" && <BookingsTable rows={state.rows} />}

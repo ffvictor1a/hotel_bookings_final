@@ -75,6 +75,13 @@
             "displayName": "retool_db",
             "type": "retoolDb"
           }
+        ],
+        "/backend/bookings/updateBooking.ts": [
+          {
+            "name": "68ce67f9-d1f5-470a-82e3-7476ff5b41aa",
+            "displayName": "retool_db",
+            "type": "retoolDb"
+          }
         ]
       }
     }
