@@ -696,7 +696,9 @@ function buildBookingModal(){
             </div>
             <div class="form-field">
               <label>Αριθμός ατόμων *</label>
-              <input type="number" name="guests" min="1" max="6" value="1" required>
+              <select name="guests" id="guestsSelect" required>
+                <option value="1">1</option>
+              </select>
             </div>
             <div class="form-field">
               <label>Στοιχεία συνοδού <span class="opt">(προαιρετικό)</span></label>
@@ -788,10 +790,24 @@ function buildBookingModal(){
   // ξαναϋπολογίζει και δείχνει το εκτιμώμενο συνολικό κόστος.
   const hotelSel = overlay.querySelector('#hotelSelect');
   const roomTypeSel = overlay.querySelector('select[name=roomType]');
+  const guestsSel = overlay.querySelector('#guestsSelect');
   const checkinInput = overlay.querySelector('input[name=checkin]');
   const checkoutInput = overlay.querySelector('input[name=checkout]');
   const priceValueEl = overlay.querySelector('#priceValue');
   const priceNoteEl = overlay.querySelector('#priceNote');
+
+  const roomCapacity = { 'Μονόκλινο': 1, 'Δίκλινο': 2, 'Τρίκλινο': 3 };
+
+  function updateGuestsOptions() {
+    const max = roomCapacity[roomTypeSel.value] || 1;
+    const currentVal = parseInt(guestsSel.value, 10) || 1;
+    let opts = '';
+    for (let i = 1; i <= max; i++) opts += `<option value="${i}">${i}</option>`;
+    guestsSel.innerHTML = opts;
+    guestsSel.value = Math.min(currentVal, max);
+  }
+  roomTypeSel.addEventListener('change', updateGuestsOptions);
+  updateGuestsOptions();
 
   function updatePrice(){
     const { nights, perNight, total } = calcTotalPrice(
@@ -817,6 +833,7 @@ function buildBookingModal(){
   function validateBooking(data){
     const errors = [];
     const guests = parseInt(data.guests, 10);
+    const maxGuests = roomCapacity[data.roomType] || 1;
     const today = new Date(); today.setHours(0,0,0,0);
     const checkinDate = new Date(data.checkin);
     const checkoutDate = new Date(data.checkout);
@@ -824,8 +841,8 @@ function buildBookingModal(){
     if(isNaN(guests) || guests < 1){
       errors.push('Ο αριθμός ατόμων πρέπει να είναι τουλάχιστον 1.');
     }
-    if(guests > 6){
-      errors.push('Για πάνω από 6 άτομα, επικοινώνησε απευθείας με τη GS Travel (group booking).');
+    if(guests > maxGuests){
+      errors.push(`Το ${data.roomType} δωμάτιο χωράει έως ${maxGuests} άτομα.`);
     }
     if(!data.checkin || !data.checkout){
       errors.push('Συμπλήρωσε ημερομηνία άφιξης και αναχώρησης.');
