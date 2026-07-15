@@ -85,7 +85,7 @@ function ReportTable<T extends Record<string, unknown>>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 15 } },
+    initialState: { pagination: { pageSize: 10 } },
   })
 
   if (error) {
@@ -116,15 +116,15 @@ function ReportTable<T extends Record<string, unknown>>({
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border border-border overflow-auto">
-        <Table>
+      <div className="rounded-lg border border-border w-full">
+        <Table className="table-fixed w-full">
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id} className="bg-muted/50">
                 {hg.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap cursor-pointer select-none"
+                    className="px-3 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer select-none"
                     onClick={header.column.getToggleSortingHandler()}
                   >
                     <div className="flex items-center gap-1">
@@ -149,7 +149,7 @@ function ReportTable<T extends Record<string, unknown>>({
               Array.from({ length: 6 }).map((_, i) => (
                 <TableRow key={i}>
                   {columns.map((_, ci) => (
-                    <TableCell key={ci} className="px-4 py-3">
+                    <TableCell key={ci} className="px-3 py-3">
                       <Skeleton className="h-4 w-full" />
                     </TableCell>
                   ))}
@@ -165,7 +165,7 @@ function ReportTable<T extends Record<string, unknown>>({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} className="hover:bg-muted/40 transition-colors">
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-3 text-sm">
+                    <TableCell key={cell.id} className="px-3 py-2.5 text-sm break-words">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -210,7 +210,7 @@ function fmtDateTime(d: string | null | undefined) {
 }
 
 function cell(v: unknown) {
-  return <span className="text-foreground">{v == null || v === "" ? <span className="text-muted-foreground">—</span> : String(v)}</span>
+  return <span className="text-foreground break-words">{v == null || v === "" ? <span className="text-muted-foreground">—</span> : String(v)}</span>
 }
 
 function statusBadge(status: unknown) {
@@ -422,12 +422,15 @@ export default function ReportsTab() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="rooming">
-          <TabsList className="mb-6">
-            <TabsTrigger value="rooming">Rooming List</TabsTrigger>
-            <TabsTrigger value="full">Full Report</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
-            <TabsTrigger value="changes">Changes</TabsTrigger>
-          </TabsList>
+          {/* Horizontally scrollable tab bar on narrow screens */}
+          <div className="overflow-x-auto pb-1 mb-4 -mx-1 px-1">
+            <TabsList className="inline-flex min-w-max">
+              <TabsTrigger value="rooming">Rooming List</TabsTrigger>
+              <TabsTrigger value="full">Full Report</TabsTrigger>
+              <TabsTrigger value="payments">Payments</TabsTrigger>
+              <TabsTrigger value="changes">Changes</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="rooming">
             <RoomingListTab />

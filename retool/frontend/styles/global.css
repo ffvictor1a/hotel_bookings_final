@@ -1,4 +1,13 @@
 /*
+ * Prevent horizontal page scrollbars at any viewport width.
+ * Tables / sections that need h-scroll use overflow-x: auto internally.
+ */
+html,
+body {
+  overflow-x: hidden;
+}
+
+/*
  * Native date / time inputs:
  * Without color-scheme the browser always renders the picker popup and
  * the internal date-part text in light mode, making them invisible on a

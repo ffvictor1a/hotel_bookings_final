@@ -656,7 +656,7 @@ function buildBookingModal(){
       <form id="bookingForm">
         <div class="modal-body">
 
-          <div class="form-section-title">Στοιχεία Επικοινωνίας</div>
+          <div class="form-section-title">Στοιχεια Επικοινωνιας</div>
           <div class="form-grid">
             <div class="form-field full">
               <label>Ονοματεπώνυμο *</label>
@@ -672,7 +672,7 @@ function buildBookingModal(){
             </div>
           </div>
 
-          <div class="form-section-title">Στοιχεία Κράτησης</div>
+          <div class="form-section-title">Στοιχεια Κρατησης</div>
           <div class="form-grid">
             <div class="form-field">
               <label>Ημερομηνία άφιξης *</label>
@@ -696,9 +696,7 @@ function buildBookingModal(){
             </div>
             <div class="form-field">
               <label>Αριθμός ατόμων *</label>
-              <select name="guests" id="guestsSelect" required>
-                <option value="1">1</option>
-              </select>
+              <input type="number" name="guests" min="1" max="6" value="1" required>
             </div>
             <div class="form-field">
               <label>Στοιχεία συνοδού <span class="opt">(προαιρετικό)</span></label>
@@ -716,7 +714,7 @@ function buildBookingModal(){
 
           <div class="form-error" id="formError"></div>
 
-          <div class="form-section-title">Επιπλέον Πληροφορίες</div>
+          <div class="form-section-title">Επιπλεον Πληροφοριες</div>
           <div class="form-field full">
             <label>Ειδικές ανάγκες <span class="opt">(διατροφικές, προσβασιμότητα κ.λπ.)</span></label>
             <textarea name="specialNeeds"></textarea>
@@ -726,25 +724,55 @@ function buildBookingModal(){
             <textarea name="notes"></textarea>
           </div>
 
-          <div class="form-section-title">Τιμολόγηση</div>
+          <div class="form-section-title">Τιμολογηση</div>
           <div class="form-field full">
             <div class="radio-row">
               <label class="radio-opt"><input type="radio" name="billingType" value="receipt" checked> Απόδειξη</label>
               <label class="radio-opt"><input type="radio" name="billingType" value="invoice"> Τιμολόγιο</label>
             </div>
           </div>
+
+          <!-- 👉 ΠΕΔΙΑ ΓΙΑ "ΑΠΟΔΕΙΞΗ" — προαιρετικά, κανένα υποχρεωτικό -->
+          <div class="invoice-fields show" id="receiptFields">
+            <div class="form-field">
+              <label>ΑΦΜ <span class="opt">(προαιρετικό)</span></label>
+              <input type="text" name="receipt_vat">
+            </div>
+            <div class="form-field">
+              <label>Δ.Ο.Υ. <span class="opt">(προαιρετικό)</span></label>
+              <input type="text" name="receipt_tax_office">
+            </div>
+          </div>
+
+          <!-- 👉 ΠΕΔΙΑ ΓΙΑ "ΤΙΜΟΛΟΓΙΟ" — όλα υποχρεωτικά -->
           <div class="invoice-fields" id="invoiceFields">
             <div class="form-field">
-              <label>Επωνυμία εταιρείας</label>
+              <label>Επωνυμία εταιρείας *</label>
               <input type="text" name="companyName">
             </div>
             <div class="form-field">
-              <label>ΑΦΜ</label>
+              <label>ΑΦΜ *</label>
               <input type="text" name="vat">
             </div>
+            <div class="form-field">
+              <label>Δ.Ο.Υ. *</label>
+              <input type="text" name="tax_office">
+            </div>
+            <div class="form-field">
+              <label>Τηλέφωνο εταιρείας *</label>
+              <input type="text" name="company_phone">
+            </div>
             <div class="form-field full">
-              <label>Δ.Ο.Υ.</label>
-              <input type="text" name="taxOffice">
+              <label>Διεύθυνση εταιρείας *</label>
+              <input type="text" name="company_address">
+            </div>
+            <div class="form-field">
+              <label>Email εταιρείας *</label>
+              <input type="email" name="company_email">
+            </div>
+            <div class="form-field">
+              <label>Δραστηριότητα *</label>
+              <input type="text" name="company_activity">
             </div>
           </div>
 
@@ -775,9 +803,16 @@ function buildBookingModal(){
 
   overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeBookingForm(); });
 
+  // 👉 Εναλλαγή Απόδειξη ↔ Τιμολόγιο: δείχνει το σωστό set πεδίων, και κάνει
+  // τα πεδία τιμολογίου πραγματικά υποχρεωτικά (required) ΜΟΝΟ όταν είναι ορατά
+  // — αλλιώς ο browser μπλοκάρει το submit για required πεδία που είναι κρυφά.
+  const invoiceRequiredInputs = overlay.querySelectorAll('#invoiceFields input');
   overlay.querySelectorAll('input[name=billingType]').forEach(r=>{
     r.addEventListener('change', ()=>{
-      document.getElementById('invoiceFields').classList.toggle('show', r.value==='invoice' && r.checked);
+      const isInvoice = r.value === 'invoice' && r.checked;
+      document.getElementById('invoiceFields').classList.toggle('show', isInvoice);
+      document.getElementById('receiptFields').classList.toggle('show', !isInvoice);
+      invoiceRequiredInputs.forEach(inp => { inp.required = isInvoice; });
     });
   });
 
@@ -790,24 +825,10 @@ function buildBookingModal(){
   // ξαναϋπολογίζει και δείχνει το εκτιμώμενο συνολικό κόστος.
   const hotelSel = overlay.querySelector('#hotelSelect');
   const roomTypeSel = overlay.querySelector('select[name=roomType]');
-  const guestsSel = overlay.querySelector('#guestsSelect');
   const checkinInput = overlay.querySelector('input[name=checkin]');
   const checkoutInput = overlay.querySelector('input[name=checkout]');
   const priceValueEl = overlay.querySelector('#priceValue');
   const priceNoteEl = overlay.querySelector('#priceNote');
-
-  const roomCapacity = { 'Μονόκλινο': 1, 'Δίκλινο': 2, 'Τρίκλινο': 3 };
-
-  function updateGuestsOptions() {
-    const max = roomCapacity[roomTypeSel.value] || 1;
-    const currentVal = parseInt(guestsSel.value, 10) || 1;
-    let opts = '';
-    for (let i = 1; i <= max; i++) opts += `<option value="${i}">${i}</option>`;
-    guestsSel.innerHTML = opts;
-    guestsSel.value = Math.min(currentVal, max);
-  }
-  roomTypeSel.addEventListener('change', updateGuestsOptions);
-  updateGuestsOptions();
 
   function updatePrice(){
     const { nights, perNight, total } = calcTotalPrice(
@@ -833,7 +854,6 @@ function buildBookingModal(){
   function validateBooking(data){
     const errors = [];
     const guests = parseInt(data.guests, 10);
-    const maxGuests = roomCapacity[data.roomType] || 1;
     const today = new Date(); today.setHours(0,0,0,0);
     const checkinDate = new Date(data.checkin);
     const checkoutDate = new Date(data.checkout);
@@ -841,8 +861,8 @@ function buildBookingModal(){
     if(isNaN(guests) || guests < 1){
       errors.push('Ο αριθμός ατόμων πρέπει να είναι τουλάχιστον 1.');
     }
-    if(guests > maxGuests){
-      errors.push(`Το ${data.roomType} δωμάτιο χωράει έως ${maxGuests} άτομα.`);
+    if(guests > 6){
+      errors.push('Για πάνω από 6 άτομα, επικοινώνησε απευθείας με τη GS Travel (group booking).');
     }
     if(!data.checkin || !data.checkout){
       errors.push('Συμπλήρωσε ημερομηνία άφιξης και αναχώρησης.');
@@ -976,6 +996,8 @@ function openBookingForm(hotelName){
     overlay.querySelector('#bookingForm').reset();
     overlay.querySelector('#submitBookingBtn').disabled = true;
     overlay.querySelector('#invoiceFields').classList.remove('show');
+    overlay.querySelector('#receiptFields').classList.add('show');
+    overlay.querySelectorAll('#invoiceFields input').forEach(inp => { inp.required = false; });
     overlay.querySelector('#formError').classList.remove('show');
     overlay.querySelector('#priceValue').textContent = '€0';
     overlay.querySelector('#priceNote').textContent = 'Επίλεξε ημερομηνίες, ξενοδοχείο και τύπο δωματίου';

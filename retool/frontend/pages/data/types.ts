@@ -12,6 +12,17 @@ export type Booking = {
   mobile: string | null
   guests: number | null
   created_at: string
+  // Billing fields
+  billing_type: "receipt" | "invoice" | null
+  receipt_vat: string | null
+  receipt_tax_office: string | null
+  company_name: string | null
+  vat: string | null
+  tax_office: string | null
+  company_phone: string | null
+  company_address: string | null
+  company_email: string | null
+  company_activity: string | null
 }
 
 export type Allotment = {
