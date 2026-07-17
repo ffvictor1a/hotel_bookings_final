@@ -249,7 +249,6 @@ export function StarterCanvas({ fadeIn = true }: StarterCanvasProps): JSX.Elemen
     const pointerActiveLoc = gl.getUniformLocation(program, 'u_pointer_active')
     const colorShiftLoc = gl.getUniformLocation(program, 'u_color_shift')
 
-    const startTime = performance.now()
     let rafId = 0
     let fadeInRafId = 0
 
@@ -293,8 +292,12 @@ export function StarterCanvas({ fadeIn = true }: StarterCanvasProps): JSX.Elemen
       gl.clearColor(0, 0, 0, 0)
       gl.clear(gl.COLOR_BUFFER_BIT)
 
-      // Wrap on a ~17.4 min cycle (2^20 ms) so u_time stays representable under mediump float — otherwise per-frame phase increments fall below 1 ulp after a few minutes and the gradient stutters on mobile GPUs.
-      const elapsed = Math.max(0, now - startTime) % 1048576
+      // Drive u_time off the shared wall clock, not performance.now (which counts from each document's
+      // own start). Two instances of this gradient — the editor's loading overlay and the iframe's copy
+      // of it — then render the same frame at the same moment, so a crossfade between them is seamless
+      // instead of looking like the animation restarts. Wrap on a ~17.4 min cycle (2^20 ms) to keep
+      // u_time small enough for float precision.
+      const elapsed = Date.now() % 1048576
 
       if (timeLoc) gl.uniform1f(timeLoc, elapsed)
       if (aspectLoc) gl.uniform1f(aspectLoc, width / Math.max(1, height))

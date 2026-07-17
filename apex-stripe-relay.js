@@ -4,7 +4,7 @@ export default {
     
     const body = await request.text();
 
-    const retoolRes = await fetch('https://api.retool.com/v1/workflows/fb1a43fe-ff18-4a1c-939b-9ecd1401d79c/startTrigger', {
+    const retoolRes = await fetch('https://api.retool.com/v1/workflows/03371035-1dc6-4d80-88bd-7f5399259f71/startTrigger', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
