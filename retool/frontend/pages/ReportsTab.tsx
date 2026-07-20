@@ -33,7 +33,6 @@ const HOTELS = [
 
 const STATUS_CFG: Record<string, string> = {
   paid:      "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700",
-  confirmed: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-700",
   pending:   "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700",
   cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700",
 }
@@ -116,7 +115,7 @@ function ReportTable<T extends Record<string, unknown>>({
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border border-border w-full">
+      <div className="rounded-lg border border-border w-full [&>div]:!overflow-x-hidden">
         <Table className="table-fixed w-full">
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
@@ -240,11 +239,19 @@ const ROOMING_COLS: ColumnDef<RoomingRow>[] = [
   { accessorKey: "special_needs", header: "Ειδικές Ανάγκες", cell: ({ getValue }) => cell(getValue()) },
 ]
 
-function RoomingListTab() {
-  const [hotel, setHotel] = useState(HOTELS[0]!)
+function RoomingListTab({ hotels }: { hotels: string[] }) {
+  const [hotel, setHotel] = useState(hotels[0] ?? "")
   const { data, loading, error, trigger } = useGetRoomingList()
 
-  useEffect(() => { trigger({ hotel }) }, [hotel])
+  // Re-sync selected hotel when the list changes (e.g. after a new hotel is added)
+  useEffect(() => {
+    if (hotels.length > 0 && !hotels.includes(hotel)) {
+      setHotel(hotels[0] ?? "")
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hotels])
+
+  useEffect(() => { if (hotel) trigger({ hotel }) }, [hotel])
 
   const rows = (data as RoomingRow[] | undefined) ?? []
 
@@ -253,11 +260,11 @@ function RoomingListTab() {
       <div className="flex items-center gap-3 flex-wrap">
         <label className="text-sm font-medium text-foreground whitespace-nowrap">Ξενοδοχείο:</label>
         <Select value={hotel} onValueChange={setHotel}>
-          <SelectTrigger className="w-72">
+          <SelectTrigger className="w-full sm:w-72">
             <SelectValue placeholder="Επιλέξτε ξενοδοχείο" />
           </SelectTrigger>
           <SelectContent>
-            {HOTELS.map((h) => (
+            {hotels.map((h) => (
               <SelectItem key={h} value={h}>{h}</SelectItem>
             ))}
           </SelectContent>
@@ -414,7 +421,8 @@ function ChangesTab() {
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
-export default function ReportsTab() {
+export default function ReportsTab({ hotelNames }: { hotelNames?: string[] | undefined }) {
+  const hotels = hotelNames && hotelNames.length > 0 ? hotelNames : HOTELS
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -433,7 +441,7 @@ export default function ReportsTab() {
           </div>
 
           <TabsContent value="rooming">
-            <RoomingListTab />
+            <RoomingListTab hotels={hotels} />
           </TabsContent>
           <TabsContent value="full">
             <FullReportTab />

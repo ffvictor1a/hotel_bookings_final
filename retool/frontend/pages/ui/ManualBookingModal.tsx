@@ -192,11 +192,12 @@ type RoomRowProps = {
   errors: Record<string, string>
   canRemove: boolean
   computedAmount: number
+  hotels: string[]
   onRemove: () => void
   onChange: (key: keyof RoomFormEntry, value: string | number) => void
 }
 
-function RoomRow({ idx, room, errors, canRemove, computedAmount, onRemove, onChange }: RoomRowProps) {
+function RoomRow({ idx, room, errors, canRemove, computedAmount, hotels, onRemove, onChange }: RoomRowProps) {
   return (
     <div className="p-4 rounded-lg border border-border bg-muted/20 space-y-3">
       {canRemove && (
@@ -220,7 +221,7 @@ function RoomRow({ idx, room, errors, canRemove, computedAmount, onRemove, onCha
                 <SelectValue placeholder="Επιλέξτε ξενοδοχείο" />
               </SelectTrigger>
               <SelectContent>
-                {HOTELS.map((h) => (
+                {hotels.map((h) => (
                   <SelectItem key={h} value={h}>{h}</SelectItem>
                 ))}
               </SelectContent>
@@ -273,9 +274,10 @@ type Props = {
   open: boolean
   onClose: () => void
   onSuccess: () => void
+  hotelNames?: string[] | undefined
 }
 
-export default function ManualBookingModal({ open, onClose, onSuccess }: Props) {
+export default function ManualBookingModal({ open, onClose, onSuccess, hotelNames }: Props) {
   const [form, setForm] = useState<FormData>(initialForm)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -609,6 +611,7 @@ export default function ManualBookingModal({ open, onClose, onSuccess }: Props) 
                       computedAmount={computeRoomAmount(
                         room, form.checkin, form.checkout, form.status, allotments
                       )}
+                      hotels={hotelNames && hotelNames.length > 0 ? hotelNames : HOTELS}
                       onRemove={() => removeRoom(idx)}
                       onChange={(key, val) => setRoomField(idx, key, val)}
                     />

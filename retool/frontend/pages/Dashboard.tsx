@@ -8,7 +8,7 @@ import {
 } from "recharts"
 import {
   Hotel, BadgeDollarSign, CheckCircle2, Clock, XCircle,
-  ChevronUp, ChevronDown, Search, AlertTriangle, Plus, Ban, Pencil, Eye,
+  ChevronUp, ChevronDown, Search, AlertTriangle, Plus, Ban, Pencil, Eye, Building2,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../lib/shadcn/card"
 import { Badge } from "../lib/shadcn/badge"
@@ -30,6 +30,7 @@ import DataModal, { type ModalState } from "./ui/DataModal"
 import ManualBookingModal from "./ui/ManualBookingModal"
 import ChangeBookingModal from "./ui/ChangeBookingModal"
 import BillingDetailsModal from "./ui/BillingDetailsModal"
+import AddHotelModal from "./ui/AddHotelModal"
 
 import type { Booking, AvailabilityRow, Change } from "./data/types"
 
@@ -38,12 +39,11 @@ type ColMeta = { className?: string }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 const STATUS_CFG = {
-  paid:       { label: "Πληρωμένη",      cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700" },
-  confirmed:  { label: "Επιβεβαιωμένη", cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-700" },
-  pending:    { label: "Εκκρεμής",       cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700" },
-  cancelled:  { label: "Ακυρωμένη",     cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700" },
-  waitlisted: { label: "Λίστα Αναμονής", cls: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-700" },
-  hosted:     { label: "Hosted",         cls: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-700" },
+  paid:       { label: "Πληρωμένη",  cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700" },
+  pending:    { label: "Εκκρεμής",   cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700" },
+  cancelled:  { label: "Ακυρωμένη", cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700" },
+  waitlisted: { label: "Αναμονή",    cls: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-700" },
+  hosted:     { label: "Hosted",     cls: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-700" },
 }
 
 function fmtEur(n: number) {
@@ -74,21 +74,16 @@ function KpiCard({ title, value, icon, iconBg, loading, onClick }: KpiCardProps)
         <CardContent className="p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1 min-w-0">
-              <p className="text-sm font-medium text-muted-foreground truncate">{title}</p>
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
               {loading
                 ? <Skeleton className="h-8 w-24" />
-                : <p className="text-2xl sm:text-3xl font-bold text-foreground">{value}</p>
+                : <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{value}</p>
               }
             </div>
-            <div className={`p-3 rounded-xl shrink-0 ${iconBg} transition-transform duration-150 group-hover:scale-110`}>
+            <div className={`p-2 sm:p-3 rounded-xl shrink-0 ${iconBg} transition-transform duration-150 group-hover:scale-110`}>
               {icon}
             </div>
           </div>
-          {!loading && (
-            <p className="mt-3 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">
-              Προβολή λεπτομερειών →
-            </p>
-          )}
         </CardContent>
       </Card>
     </button>
@@ -96,27 +91,26 @@ function KpiCard({ title, value, icon, iconBg, loading, onClick }: KpiCardProps)
 }
 
 // ── Bar Chart ─────────────────────────────────────────────────────────────────
-type BarChartProps = {
+function BookingsBarChart({ data, loading, onHotelClick }: {
   data: Booking[]
   loading: boolean
   onHotelClick: (hotel: string) => void
-}
-
-function BookingsBarChart({ data, loading, onHotelClick }: BarChartProps) {
+}) {
   const [hovered, setHovered] = useState<string | null>(null)
 
   const chartData = useMemo(() => {
     const counts: Record<string, number> = {}
     data.forEach((b) => {
       if (!b.hotel) return
-      counts[b.hotel] = (counts[b.hotel] ?? 0) + 1
+      const key = b.hotel.trim()
+      counts[key] = (counts[key] ?? 0) + 1
     })
     return Object.entries(counts)
       .map(([hotel, bookings]) => ({ hotel, bookings }))
       .sort((a, b) => b.bookings - a.bookings)
   }, [data])
 
-  const tickFormatter = (v: string) => v.length > 18 ? v.slice(0, 16) + "…" : v
+  const tickFormatter = (v: string) => v.length > 16 ? v.slice(0, 14) + "…" : v
 
   return (
     <Card>
@@ -130,16 +124,12 @@ function BookingsBarChart({ data, loading, onHotelClick }: BarChartProps) {
             {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-6 w-full" />)}
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={290}>
-            <BarChart
-              data={chartData}
-              layout="vertical"
-              margin={{ top: 4, right: 12, left: 4, bottom: 4 }}
-            >
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
               <XAxis type="number" allowDecimals={false}
                 tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-              <YAxis type="category" dataKey="hotel" width={120}
+              <YAxis type="category" dataKey="hotel" width={110}
                 tickFormatter={tickFormatter}
                 tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
               <Tooltip
@@ -153,20 +143,14 @@ function BookingsBarChart({ data, loading, onHotelClick }: BarChartProps) {
                 }}
                 formatter={(value) => [value, "Κρατήσεις"]}
               />
-              <Bar
-                dataKey="bookings"
-                radius={[0, 4, 4, 0]}
-                cursor="pointer"
+              <Bar dataKey="bookings" radius={[0, 4, 4, 0]} cursor="pointer"
                 onClick={(entry) => onHotelClick((entry as unknown as { hotel: string }).hotel)}
                 onMouseEnter={(entry) => setHovered((entry as unknown as { hotel: string }).hotel)}
                 onMouseLeave={() => setHovered(null)}
               >
                 {chartData.map((entry) => (
-                  <Cell
-                    key={entry.hotel}
-                    fill={hovered === entry.hotel
-                      ? "hsl(var(--chart-1) / 0.7)"
-                      : "hsl(var(--chart-1))"}
+                  <Cell key={entry.hotel}
+                    fill={hovered === entry.hotel ? "hsl(var(--chart-1) / 0.7)" : "hsl(var(--chart-1))"}
                   />
                 ))}
               </Bar>
@@ -179,12 +163,7 @@ function BookingsBarChart({ data, loading, onHotelClick }: BarChartProps) {
 }
 
 // ── Bookings Table ────────────────────────────────────────────────────────────
-function BookingsTable({
-  data,
-  loading,
-  onCancelSuccess,
-  onEditBooking,
-}: {
+function BookingsTable({ data, loading, onCancelSuccess, onEditBooking }: {
   data: Booking[]
   loading: boolean
   onCancelSuccess: () => void
@@ -202,7 +181,7 @@ function BookingsTable({
       accessorKey: "full_name",
       header: "Επισκέπτης",
       cell: ({ getValue }) => (
-        <span className="font-medium text-foreground block max-w-[130px] truncate">
+        <span className="font-medium text-foreground block w-full min-w-0 truncate">
           {getValue<string | null>() ?? "—"}
         </span>
       ),
@@ -212,7 +191,7 @@ function BookingsTable({
       header: "Ξενοδοχείο",
       meta: { className: "hidden sm:table-cell" } satisfies ColMeta,
       cell: ({ getValue }) => (
-        <span className="block max-w-[150px] truncate text-muted-foreground">
+        <span className="block w-full min-w-0 truncate text-muted-foreground">
           {getValue<string | null>() ?? "—"}
         </span>
       ),
@@ -222,7 +201,7 @@ function BookingsTable({
       header: "Δωμάτιο",
       meta: { className: "hidden lg:table-cell" } satisfies ColMeta,
       cell: ({ getValue }) => (
-        <span className="block max-w-[110px] truncate">
+        <span className="block w-full min-w-0 truncate">
           {getValue<string | null>() ?? "—"}
         </span>
       ),
@@ -233,7 +212,7 @@ function BookingsTable({
       meta: { className: "hidden md:table-cell" } satisfies ColMeta,
       cell: ({ getValue }) => {
         const v = getValue<string | null>()
-        return <span className="whitespace-nowrap">{v ? fmtDate(v) : "—"}</span>
+        return <span className="tabular-nums">{v ? fmtDate(v) : "—"}</span>
       },
     },
     {
@@ -242,7 +221,7 @@ function BookingsTable({
       meta: { className: "hidden lg:table-cell" } satisfies ColMeta,
       cell: ({ getValue }) => {
         const v = getValue<string | null>()
-        return <span className="whitespace-nowrap">{v ? fmtDate(v) : "—"}</span>
+        return <span className="tabular-nums">{v ? fmtDate(v) : "—"}</span>
       },
     },
     {
@@ -250,7 +229,7 @@ function BookingsTable({
       header: "Ποσό",
       meta: { className: "hidden sm:table-cell" } satisfies ColMeta,
       cell: ({ getValue }) => (
-        <span className="font-semibold tabular-nums whitespace-nowrap">
+        <span className="font-semibold tabular-nums">
           {fmtEur(getValue<number | null>() ?? 0)}
         </span>
       ),
@@ -262,7 +241,7 @@ function BookingsTable({
         const s = getValue<string>()
         const c = STATUS_CFG[s as keyof typeof STATUS_CFG] ?? { label: s ?? "—", cls: "bg-muted text-muted-foreground border-border" }
         return (
-          <Badge variant="outline" className={`text-xs font-medium whitespace-nowrap ${c.cls}`}>
+          <Badge variant="outline" className={`text-xs font-medium ${c.cls}`}>
             {c.label}
           </Badge>
         )
@@ -274,34 +253,22 @@ function BookingsTable({
       cell: ({ row }) => {
         const b = row.original
 
-        // Confirmation mode for cancel
         if (confirmId === b.id) {
           return (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="destructive"
-                size="sm"
-                className="h-7 text-xs px-2"
+            <div className="flex items-center gap-1 flex-nowrap">
+              <Button variant="destructive" size="sm" className="h-7 text-xs px-2 shrink-0"
                 disabled={cancellingId === b.id}
                 onClick={async () => {
                   setCancellingId(b.id)
                   setConfirmId(null)
-                  try {
-                    await cancelBooking({ booking_id: b.id })
-                    onCancelSuccess()
-                  } finally {
-                    setCancellingId(null)
-                  }
+                  try { await cancelBooking({ booking_id: b.id }); onCancelSuccess() }
+                  finally { setCancellingId(null) }
                 }}
               >
-                {cancellingId === b.id ? "..." : <><span className="hidden sm:inline">Ναι, </span>Ακύρωση</>}
+                {cancellingId === b.id ? "…" : "Ακύρωση"}
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs px-2"
-                onClick={() => setConfirmId(null)}
-              >
+              <Button variant="ghost" size="sm" className="h-7 text-xs px-2 shrink-0"
+                onClick={() => setConfirmId(null)}>
                 Όχι
               </Button>
             </div>
@@ -309,42 +276,22 @@ function BookingsTable({
         }
 
         return (
-          <div className="flex items-center gap-1">
-            {/* Billing details */}
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label="Στοιχεία τιμολόγησης"
-              className="h-7 px-1.5 sm:px-2 text-muted-foreground hover:text-primary hover:bg-primary/10"
-              onClick={() => setBillingBooking(b)}
-            >
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="sm" aria-label="Λεπτομέρειες"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
+              onClick={() => setBillingBooking(b)}>
               <Eye className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline ml-1 text-xs">Στοιχεία</span>
             </Button>
-
-            {/* Edit */}
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label="Αλλαγή"
-              className="h-7 px-1.5 sm:px-2 text-muted-foreground hover:text-primary hover:bg-primary/10"
-              onClick={() => onEditBooking(b)}
-            >
+            <Button variant="ghost" size="sm" aria-label="Αλλαγή"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
+              onClick={() => onEditBooking(b)}>
               <Pencil className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline ml-1 text-xs">Αλλαγή</span>
             </Button>
-
-            {/* Cancel — only for non-cancelled */}
             {b.status !== "cancelled" && (
-              <Button
-                variant="ghost"
-                size="sm"
-                aria-label="Ακύρωση"
-                className="h-7 px-1.5 sm:px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                onClick={() => setConfirmId(b.id)}
-              >
+              <Button variant="ghost" size="sm" aria-label="Ακύρωση"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setConfirmId(b.id)}>
                 <Ban className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline ml-1 text-xs">Ακύρωση</span>
               </Button>
             )}
           </div>
@@ -368,18 +315,16 @@ function BookingsTable({
 
   return (
     <>
-      <Card className="min-w-0">
+      <Card className="min-w-0 w-full">
         <CardHeader className="pb-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base font-semibold">Όλες οι Κρατήσεις</CardTitle>
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Αναζήτηση..."
+              <Input placeholder="Αναζήτηση..."
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
-                className="pl-9 h-9"
-              />
+                className="pl-9 h-9" />
             </div>
           </div>
         </CardHeader>
@@ -390,16 +335,15 @@ function BookingsTable({
             </div>
           ) : (
             <>
-              {/* Table — no horizontal page scroll; columns hide on narrow screens */}
-              <div className="overflow-x-auto">
-                <Table>
+              {/* [&>div]:!overflow-x-hidden targets shadcn's inner overflow-auto wrapper */}
+              <div className="[&>div]:!overflow-x-hidden min-w-0">
+                <Table className="table-fixed w-full">
                   <TableHeader>
                     {table.getHeaderGroups().map((hg) => (
                       <TableRow key={hg.id} className="hover:bg-transparent border-b border-border">
                         {hg.headers.map((h) => (
-                          <TableHead
-                            key={h.id}
-                            className={`px-3 sm:px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap cursor-pointer select-none ${(h.column.columnDef.meta as ColMeta | undefined)?.className ?? ""}`}
+                          <TableHead key={h.id}
+                            className={`px-2 sm:px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer select-none ${(h.column.columnDef.meta as ColMeta | undefined)?.className ?? ""}`}
                             onClick={h.column.getToggleSortingHandler()}
                           >
                             <div className="flex items-center gap-1">
@@ -423,9 +367,8 @@ function BookingsTable({
                       table.getRowModel().rows.map((row) => (
                         <TableRow key={row.id} className="hover:bg-muted/50 transition-colors">
                           {row.getVisibleCells().map((cell) => (
-                            <TableCell
-                              key={cell.id}
-                              className={`px-3 sm:px-5 py-3 text-sm text-muted-foreground ${(cell.column.columnDef.meta as ColMeta | undefined)?.className ?? ""}`}
+                            <TableCell key={cell.id}
+                              className={`px-2 sm:px-4 py-3 text-sm text-muted-foreground overflow-hidden ${(cell.column.columnDef.meta as ColMeta | undefined)?.className ?? ""}`}
                             >
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </TableCell>
@@ -458,7 +401,6 @@ function BookingsTable({
         </CardContent>
       </Card>
 
-      {/* Billing details modal — lives here so it has access to setBillingBooking state */}
       <BillingDetailsModal booking={billingBooking} onClose={() => setBillingBooking(null)} />
     </>
   )
@@ -478,26 +420,33 @@ export default function Dashboard() {
   const availability = (aData as AvailabilityRow[] | undefined) ?? []
   const changes      = (cData as Change[]          | undefined) ?? []
 
-  // ── KPI derivations ──────────────────────────────────────────────────────
   const kpis = useMemo(() => {
-    const paid        = bookings.filter((b) => b.status === "paid")
-    const confirmed   = bookings.filter((b) => b.status === "confirmed")
-    const pending     = bookings.filter((b) => b.status === "pending")
-    const cancelled   = bookings.filter((b) => b.status === "cancelled")
+    const paid      = bookings.filter((b) => b.status === "paid")
+    const pending   = bookings.filter((b) => b.status === "pending")
+    const cancelled = bookings.filter((b) => b.status === "cancelled")
     const nonWaitlisted = bookings.filter((b) => b.status !== "waitlisted")
-
-    const revenue = [...paid, ...confirmed].reduce((s, b) => s + (b.amount ?? 0), 0)
-
+    const revenue = paid.reduce((s, b) => s + (b.amount ?? 0), 0)
     const pendingChanges = changes.filter(
       (c) => c.requires_payment === "yes" || c.requires_refund === "yes"
     )
-    return { total: nonWaitlisted.length, nonWaitlisted, revenue, paid, confirmed, pending, cancelled, pendingChanges }
+    return { total: nonWaitlisted.length, nonWaitlisted, revenue, paid, pending, cancelled, pendingChanges }
   }, [bookings, changes])
 
-  // ── Modal state ──────────────────────────────────────────────────────────
+  const sortedBookings = useMemo(
+    () => [...bookings].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+    [bookings]
+  )
+
   const [modal, setModal] = useState<ModalState | null>(null)
   const [manualBookingOpen, setManualBookingOpen] = useState(false)
+  const [addHotelOpen, setAddHotelOpen] = useState(false)
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null)
+
+  // Derive hotel names from availability — auto-updates when aTrigger(skipCache) is called
+  const hotelNames = useMemo(
+    () => [...new Set(availability.map((r) => r.hotel))].sort(),
+    [availability]
+  )
 
   function openBookingModal(title: string, rows: Booking[]) { setModal({ kind: "bookings", title, rows }) }
   function openChangesModal(title: string, rows: Change[])  { setModal({ kind: "changes",  title, rows }) }
@@ -511,11 +460,9 @@ export default function Dashboard() {
   const anyError = bError || cError
 
   return (
-    // overflow-x-hidden prevents any page-level horizontal scrollbar;
-    // individual sections use overflow-x-auto within their own containers.
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-background">
 
-      {/* ── Header ──────────────────────────────────────────────────────── */}
+      {/* ── Header ────────────────────────────────────────────────────── */}
       <header className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -527,14 +474,21 @@ export default function Dashboard() {
               <p className="text-xs text-muted-foreground">Admin Dashboard</p>
             </div>
           </div>
-          <Button onClick={() => setManualBookingOpen(true)} className="gap-2 shrink-0 text-sm">
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Χειροκίνητη </span>Κράτηση
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="outline" onClick={() => setAddHotelOpen(true)} className="gap-1.5 text-sm">
+              <Building2 className="w-4 h-4" />
+              <span className="hidden sm:inline">+ Προσθήκη Ξενοδοχείου</span>
+              <span className="sm:hidden">+Ξεν.</span>
+            </Button>
+            <Button onClick={() => setManualBookingOpen(true)} className="gap-1.5 text-sm">
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Χειροκίνητη </span>Κράτηση
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-8 sm:space-y-10">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
 
         {anyError && (
           <div className="p-4 rounded-lg bg-destructive/10 text-destructive text-sm border border-destructive/20">
@@ -542,107 +496,62 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── KPI Cards — wrap to new rows automatically ───────────────── */}
-        <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4">
-          <KpiCard
-            title="Σύνολο Κρατήσεων"
-            value={kpis.total}
-            icon={<Hotel className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
-            iconBg="bg-blue-100 dark:bg-blue-900/30"
-            loading={bLoading}
-            onClick={() => openBookingModal("Σύνολο Κρατήσεων", kpis.nonWaitlisted)}
-          />
-          <KpiCard
-            title="Συνολικά Έσοδα"
-            value={bLoading ? "—" : fmtEur(kpis.revenue)}
-            icon={<BadgeDollarSign className="w-5 h-5 text-violet-600 dark:text-violet-400" />}
-            iconBg="bg-violet-100 dark:bg-violet-900/30"
-            loading={bLoading}
-            onClick={() => openBookingModal("Πληρωμένες & Επιβεβαιωμένες (Έσοδα)", [...kpis.paid, ...kpis.confirmed])}
-          />
-          <KpiCard
-            title="Πληρωμένες"
-            value={kpis.paid.length}
-            icon={<CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
-            iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-            loading={bLoading}
-            onClick={() => openBookingModal("Πληρωμένες κρατήσεις", kpis.paid)}
-          />
-          <KpiCard
-            title="Εκκρεμείς"
-            value={kpis.pending.length}
-            icon={<Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
-            iconBg="bg-amber-100 dark:bg-amber-900/30"
-            loading={bLoading}
-            onClick={() => openBookingModal("Εκκρεμείς κρατήσεις", kpis.pending)}
-          />
-          <KpiCard
-            title="Ακυρωμένες"
-            value={kpis.cancelled.length}
-            icon={<XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />}
-            iconBg="bg-red-100 dark:bg-red-900/30"
-            loading={bLoading}
-            onClick={() => openBookingModal("Ακυρωμένες κρατήσεις", kpis.cancelled)}
-          />
-          <KpiCard
-            title="Pending Αλλαγές"
-            value={kpis.pendingChanges.length}
-            icon={<AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />}
-            iconBg="bg-orange-100 dark:bg-orange-900/30"
-            loading={cLoading}
-            onClick={() => openChangesModal("Αλλαγές που απαιτούν ενέργεια", kpis.pendingChanges)}
-          />
+        {/* ── KPI Cards — 2 cols mobile, 3 cols sm+ ─────────────────── */}
+        <section className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <KpiCard title="Σύνολο Κρατήσεων" value={kpis.total}
+            icon={<Hotel className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />}
+            iconBg="bg-blue-100 dark:bg-blue-900/30" loading={bLoading}
+            onClick={() => openBookingModal("Σύνολο Κρατήσεων", kpis.nonWaitlisted)} />
+          <KpiCard title="Συνολικά Έσοδα" value={bLoading ? "—" : fmtEur(kpis.revenue)}
+            icon={<BadgeDollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-violet-600 dark:text-violet-400" />}
+            iconBg="bg-violet-100 dark:bg-violet-900/30" loading={bLoading}
+            onClick={() => openBookingModal("Πληρωμένες (Έσοδα)", kpis.paid)} />
+          <KpiCard title="Πληρωμένες" value={kpis.paid.length}
+            icon={<CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />}
+            iconBg="bg-emerald-100 dark:bg-emerald-900/30" loading={bLoading}
+            onClick={() => openBookingModal("Πληρωμένες κρατήσεις", kpis.paid)} />
+          <KpiCard title="Εκκρεμείς" value={kpis.pending.length}
+            icon={<Clock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />}
+            iconBg="bg-amber-100 dark:bg-amber-900/30" loading={bLoading}
+            onClick={() => openBookingModal("Εκκρεμείς κρατήσεις", kpis.pending)} />
+          <KpiCard title="Ακυρωμένες" value={kpis.cancelled.length}
+            icon={<XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />}
+            iconBg="bg-red-100 dark:bg-red-900/30" loading={bLoading}
+            onClick={() => openBookingModal("Ακυρωμένες κρατήσεις", kpis.cancelled)} />
+          <KpiCard title="Pending Αλλαγές" value={kpis.pendingChanges.length}
+            icon={<AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 dark:text-orange-400" />}
+            iconBg="bg-orange-100 dark:bg-orange-900/30" loading={cLoading}
+            onClick={() => openChangesModal("Αλλαγές που απαιτούν ενέργεια", kpis.pendingChanges)} />
         </section>
 
-        {/* ── Bar Chart ────────────────────────────────────────────────── */}
-        <BookingsBarChart
-          data={bookings}
-          loading={bLoading}
+        {/* ── Bar Chart ───────────────────────────────────────────────── */}
+        <BookingsBarChart data={bookings} loading={bLoading}
           onHotelClick={(hotel) =>
-            openBookingModal(`Κρατήσεις — ${hotel}`, bookings.filter((b) => b.hotel === hotel))
-          }
+            openBookingModal(`Κρατήσεις — ${hotel}`, bookings.filter((b) => b.hotel?.trim() === hotel))}
         />
 
-        {/* ── Allotments ───────────────────────────────────────────────── */}
+        {/* ── Allotments ──────────────────────────────────────────────── */}
         <AllotmentsSection rows={availability} loading={aLoading} />
 
         {/* ── Changes ─────────────────────────────────────────────────── */}
-        <ChangesSection
-          changes={changes}
-          loading={cLoading}
-          onHeaderClick={() => openChangesModal("Λίστα Αλλαγών", changes)}
-        />
+        <ChangesSection changes={changes} loading={cLoading}
+          onHeaderClick={() => openChangesModal("Λίστα Αλλαγών", changes)} />
 
         {/* ── All Bookings Table ───────────────────────────────────────── */}
-        <BookingsTable
-          data={bookings}
-          loading={bLoading}
+        <BookingsTable data={sortedBookings} loading={bLoading}
           onCancelSuccess={refreshAll}
-          onEditBooking={(b) => setEditingBooking(b)}
-        />
+          onEditBooking={(b) => setEditingBooking(b)} />
 
         {/* ── Reports Tabs ─────────────────────────────────────────────── */}
-        <ReportsTab />
+        <ReportsTab hotelNames={hotelNames} />
 
       </main>
 
-      {/* ── Detail Modal ─────────────────────────────────────────────── */}
       <DataModal state={modal} onClose={() => setModal(null)} />
-
-      {/* ── Manual Booking Modal ─────────────────────────────────────── */}
-      <ManualBookingModal
-        open={manualBookingOpen}
-        onClose={() => setManualBookingOpen(false)}
-        onSuccess={refreshAll}
-      />
-
-      {/* ── Change Booking Modal ─────────────────────────────────────── */}
-      <ChangeBookingModal
-        open={editingBooking !== null}
-        booking={editingBooking}
-        onClose={() => setEditingBooking(null)}
-        onSuccess={refreshAll}
-      />
+      <ManualBookingModal open={manualBookingOpen} onClose={() => setManualBookingOpen(false)} onSuccess={refreshAll} hotelNames={hotelNames} />
+      <AddHotelModal open={addHotelOpen} onClose={() => setAddHotelOpen(false)} onSuccess={refreshAll} />
+      <ChangeBookingModal open={editingBooking !== null} booking={editingBooking}
+        onClose={() => setEditingBooking(null)} onSuccess={refreshAll} />
     </div>
   )
 }

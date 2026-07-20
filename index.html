@@ -517,31 +517,61 @@ const ICON_TRANSIT = '<svg viewBox="0 0 24 24" fill="none" stroke="#B8801E" stro
 const ICON_PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8 9.7a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2.3z"/></svg>';
 const ICON_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M8 7h9v9"/></svg>';
 
-const hotels = [
-  {name:"Ace Hotel & Swim Club Athens", stars:5, walk:[10,0.7], drive:[2,0.8], transit:[10,0.7], phone:"+30 210 0220 188", pos:[24,32]},
-  {name:"Glyfada Riviera Hotel", stars:4, walk:[14,1.0], drive:[4,1.2], transit:[12,1.1], phone:"+30 210 0341 220", pos:[40,26]},
-  {name:"Athens Coast Hotel", stars:4, walk:[18,1.3], drive:[6,2.1], transit:[15,1.8], phone:"+30 210 0552 761", pos:[58,52]},
-  {name:"Emmantina Hotel", stars:4, walk:[16,1.1], drive:[5,1.6], transit:[13,1.4], phone:"+30 210 0894 405", pos:[55,63]},
-  {name:"Congo Palace", stars:3, walk:[20,1.5], drive:[7,2.4], transit:[17,2.0], phone:"+30 210 0762 913", pos:[62,70]},
-  {name:"Seaview Cityscape Hotel", stars:4, walk:[24,1.8], drive:[8,2.8], transit:[19,2.3], phone:"+30 210 0128 447", pos:[70,79]},
-  {name:"Dusit Suites Athens", stars:5, walk:[27,2.0], drive:[9,3.1], transit:[21,2.6], phone:"+30 210 0937 332", pos:[76,87]},
-  {name:"Poseidon Grand Hotel", stars:5, walk:[31,2.3], drive:[11,3.6], transit:[24,3.0], phone:"+30 210 0664 559", pos:[70,94]},
-];
+// 👉 Endpoint που επιστρέφει ζωντανά όλα τα ξενοδοχεία/τύπους δωματίων/τιμές από τη βάση
+const HOTELS_API_URL = 'https://apex-hotels-api.ellie32on.workers.dev/';
 
-// 👉 ΤΙΜΕΣ ΑΝΑ ΔΙΑΝΥΚΤΕΡΕΥΣΗ, ανά ξενοδοχείο + τύπο δωματίου.
-// Αντικατέστησε αυτά τα νούμερα με τις πραγματικές τιμές του ξενοδοχείου σου
-// (ιδανικά, στο πραγματικό site αυτό θα έρχεται από τη βάση/allotments table
-// αντί να είναι hardcoded εδώ).
-const roomPricing = {
-  "Ace Hotel & Swim Club Athens":  { "Μονόκλινο":185, "Δίκλινο":230, "Τρίκλινο":290 },
-  "Glyfada Riviera Hotel":         { "Μονόκλινο":149, "Δίκλινο":185, "Τρίκλινο":230 },
-  "Athens Coast Hotel":            { "Μονόκλινο":120, "Δίκλινο":150, "Τρίκλινο":190 },
-  "Emmantina Hotel":               { "Μονόκλινο":140, "Δίκλινο":175, "Τρίκλινο":215 },
-  "Congo Palace":                  { "Μονόκλινο":110, "Δίκλινο":140, "Τρίκλινο":175 },
-  "Seaview Cityscape Hotel":       { "Μονόκλινο":160, "Δίκλινο":200, "Τρίκλινο":245 },
-  "Dusit Suites Athens":           { "Μονόκλινο":210, "Δίκλινο":260, "Τρίκλινο":310 },
-  "Poseidon Grand Hotel":          { "Μονόκλινο":180, "Δίκλινο":220, "Τρίκλινο":300 },
+// Στοιχεία απόστασης (walk/drive/transit) + θέση στον χάρτη ΜΟΝΟ για τα αρχικά
+// 8 ξενοδοχεία — δεν υπάρχουν στη βάση, οπότε χρησιμεύουν σαν fallback.
+// Νέα ξενοδοχεία που προστίθενται μέσω dashboard δεν θα έχουν αυτά τα στοιχεία
+// (θα δείχνουν "—"), εκτός αν προστεθούν αντίστοιχες στήλες αργότερα.
+const STATIC_TRAVEL_INFO = {
+  "Ace Hotel & Swim Club Athens":  { walk:[10,0.7], drive:[2,0.8],  transit:[10,0.7], pos:[24,32] },
+  "Glyfada Riviera Hotel":         { walk:[14,1.0], drive:[4,1.2],  transit:[12,1.1], pos:[40,26] },
+  "Athens Coast Hotel":            { walk:[18,1.3], drive:[6,2.1],  transit:[15,1.8], pos:[58,52] },
+  "Emmantina Hotel":               { walk:[16,1.1], drive:[5,1.6],  transit:[13,1.4], pos:[55,63] },
+  "Congo Palace":                  { walk:[20,1.5], drive:[7,2.4],  transit:[17,2.0], pos:[62,70] },
+  "Seaview Cityscape Hotel":       { walk:[24,1.8], drive:[8,2.8],  transit:[19,2.3], pos:[70,79] },
+  "Dusit Suites Athens":           { walk:[27,2.0], drive:[9,3.1],  transit:[21,2.6], pos:[76,87] },
+  "Poseidon Grand Hotel":          { walk:[31,2.3], drive:[11,3.6], transit:[24,3.0], pos:[70,94] },
 };
+
+let hotels = [];        // γεμίζει δυναμικά από loadHotels()
+let roomPricing = {};   // γεμίζει δυναμικά από loadHotels()
+
+async function loadHotels(){
+  const res = await fetch(HOTELS_API_URL);
+  if(!res.ok) throw new Error('Failed to load hotels: ' + res.status);
+  const json = await res.json();
+  const rows = json.hotels || [];
+
+  const grouped = {};
+  rows.forEach(r => {
+    if(!grouped[r.hotel]) grouped[r.hotel] = { name: r.hotel, rooms: {} };
+    const g = grouped[r.hotel];
+    g.rooms[r.room_type] = Number(r.price_per_night) || 0;
+    if(g.phone == null && r.phone) g.phone = r.phone;
+    if(g.stars == null && r.stars != null) g.stars = Number(r.stars);
+    if(g.map_x == null && r.map_x != null) g.map_x = Number(r.map_x);
+    if(g.map_y == null && r.map_y != null) g.map_y = Number(r.map_y);
+  });
+
+  hotels = Object.values(grouped).map(g => {
+    const fallback = STATIC_TRAVEL_INFO[g.name] || {};
+    return {
+      name: g.name,
+      stars: g.stars ?? fallback.stars ?? 4,
+      phone: g.phone || fallback.phone || '—',
+      walk: fallback.walk || null,
+      drive: fallback.drive || null,
+      transit: fallback.transit || null,
+      // 👉 σύμβαση: map_y = top %, map_x = left %
+      pos: (g.map_y != null && g.map_x != null) ? [g.map_y, g.map_x] : (fallback.pos || [50, 50]),
+    };
+  });
+
+  roomPricing = {};
+  Object.values(grouped).forEach(g => { roomPricing[g.name] = g.rooms; });
+}
 
 function nightsBetween(checkin, checkout){
   if(!checkin || !checkout) return 0;
@@ -565,12 +595,17 @@ function starRow(n){
   return `<span class="stars">${s}</span>`;
 }
 
+// 👉 Βοηθητικό: δείχνει "X min" αν υπάρχει data, αλλιώς "—" (για νέα ξενοδοχεία)
+function routeTime(data){ return data ? `${data[0]} min` : '—'; }
+function routeDist(data, label){ return data ? `${data[1]} km · ${label}` : 'Μη διαθέσιμο'; }
+
 function sortedHotels(){
   const arr = hotels.map((h,i)=>({...h, idx:i}));
+  const val = (v) => v ? v[0] : Infinity; // ξενοδοχεία χωρίς δεδομένα πάνε τελευταία
   if(sortKey === "name") arr.sort((a,b)=>a.name.localeCompare(b.name));
-  else if(sortKey === "walk") arr.sort((a,b)=>a.walk[0]-b.walk[0]);
-  else if(sortKey === "drive") arr.sort((a,b)=>a.drive[0]-b.drive[0]);
-  else if(sortKey === "transit") arr.sort((a,b)=>a.transit[0]-b.transit[0]);
+  else if(sortKey === "walk") arr.sort((a,b)=>val(a.walk)-val(b.walk));
+  else if(sortKey === "drive") arr.sort((a,b)=>val(a.drive)-val(b.drive));
+  else if(sortKey === "transit") arr.sort((a,b)=>val(a.transit)-val(b.transit));
   return arr;
 }
 
@@ -578,6 +613,13 @@ function render(){
   document.getElementById('hotelCount').textContent = hotels.length + " Hotels";
 
   const cardsEl = document.getElementById('cards');
+
+  if(hotels.length === 0){
+    cardsEl.innerHTML = `<div style="padding:40px;text-align:center;color:var(--ink-mute)">Δεν βρέθηκαν ξενοδοχεία.</div>`;
+    document.getElementById('pins').innerHTML = '';
+    return;
+  }
+
   cardsEl.innerHTML = sortedHotels().map(h => `
     <div class="card ${h.idx===selected ? 'selected':''}" data-idx="${h.idx}">
       <div class="card-top" data-select="${h.idx}">
@@ -589,9 +631,9 @@ function render(){
       <hr class="div">
       <div class="route-label">ROUTE TO VENUE</div>
       <div class="route-grid">
-        <div class="route-box walk">${ICON_WALK}<div class="time">${h.walk[0]} min</div><div class="dist">${h.walk[1]} km · Walk</div><a class="showroute" href="#">Show route →</a></div>
-        <div class="route-box drive">${ICON_DRIVE}<div class="time">${h.drive[0]} min</div><div class="dist">${h.drive[1]} km · Drive</div><a class="showroute" href="#">Show route →</a></div>
-        <div class="route-box transit">${ICON_TRANSIT}<div class="time">${h.transit[0]} min</div><div class="dist">${h.transit[1]} km · Transit</div><a class="showroute" href="#">Show route →</a></div>
+        <div class="route-box walk">${ICON_WALK}<div class="time">${routeTime(h.walk)}</div><div class="dist">${routeDist(h.walk,'Walk')}</div><a class="showroute" href="#">Show route →</a></div>
+        <div class="route-box drive">${ICON_DRIVE}<div class="time">${routeTime(h.drive)}</div><div class="dist">${routeDist(h.drive,'Drive')}</div><a class="showroute" href="#">Show route →</a></div>
+        <div class="route-box transit">${ICON_TRANSIT}<div class="time">${routeTime(h.transit)}</div><div class="dist">${routeDist(h.transit,'Transit')}</div><a class="showroute" href="#">Show route →</a></div>
       </div>
       <div class="card-actions">
         <!-- 👉 ΚΟΥΜΠΙ ΚΡΑΤΗΣΗΣ (trigger #1) — ανοίγει τη φόρμα με προεπιλεγμένο αυτό το ξενοδοχείο -->
@@ -625,9 +667,9 @@ function render(){
     <h4>${h.name}</h4>
     ${starRow(h.stars)}
     <div class="quickroute">
-      <span>${ICON_WALK}${h.walk[0]} min</span>
-      <span>${ICON_DRIVE}${h.drive[0]} min</span>
-      <span>${ICON_TRANSIT}${h.transit[0]} min</span>
+      <span>${ICON_WALK}${routeTime(h.walk)}</span>
+      <span>${ICON_DRIVE}${routeTime(h.drive)}</span>
+      <span>${ICON_TRANSIT}${routeTime(h.transit)}</span>
     </div>
     <a class="phone" href="tel:${h.phone}">${h.phone}</a>
     <!-- 👉 ΚΟΥΜΠΙ ΚΡΑΤΗΣΗΣ (trigger #2) — ίδιο, μέσα στο popup του χάρτη -->
@@ -637,7 +679,11 @@ function render(){
 }
 
 /* ================= BOOKING FORM ================= */
-const hotelSelectOptions = hotels.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+// 👉 Υπολογίζεται ΚΑΘΕ ΦΟΡΑ (function, όχι σταθερά τιμή) ώστε να αντανακλά πάντα
+// τη φρέσκια λίστα hotels, ακόμα κι αν άλλαξε μετά το πρώτο load.
+function hotelSelectOptions(){
+  return hotels.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+}
 
 function buildBookingModal(){
   const overlay = document.createElement('div');
@@ -656,7 +702,7 @@ function buildBookingModal(){
       <form id="bookingForm">
         <div class="modal-body">
 
-          <div class="form-section-title">Στοιχεια Επικοινωνιας</div>
+          <div class="form-section-title">Στοιχεία Επικοινωνίας</div>
           <div class="form-grid">
             <div class="form-field full">
               <label>Ονοματεπώνυμο *</label>
@@ -672,7 +718,7 @@ function buildBookingModal(){
             </div>
           </div>
 
-          <div class="form-section-title">Στοιχεια Κρατησης</div>
+          <div class="form-section-title">Στοιχεία Κράτησης</div>
           <div class="form-grid">
             <div class="form-field">
               <label>Ημερομηνία άφιξης *</label>
@@ -684,7 +730,7 @@ function buildBookingModal(){
             </div>
             <div class="form-field">
               <label>Επιλογή ξενοδοχείου *</label>
-              <select name="hotel" id="hotelSelect" required>${hotelSelectOptions}</select>
+              <select name="hotel" id="hotelSelect" required>${hotelSelectOptions()}</select>
             </div>
             <div class="form-field">
               <label>Επιλογή τύπου δωματίου *</label>
@@ -714,7 +760,7 @@ function buildBookingModal(){
 
           <div class="form-error" id="formError"></div>
 
-          <div class="form-section-title">Επιπλεον Πληροφοριες</div>
+          <div class="form-section-title">Επιπλέον Πληροφορίες</div>
           <div class="form-field full">
             <label>Ειδικές ανάγκες <span class="opt">(διατροφικές, προσβασιμότητα κ.λπ.)</span></label>
             <textarea name="specialNeeds"></textarea>
@@ -724,7 +770,7 @@ function buildBookingModal(){
             <textarea name="notes"></textarea>
           </div>
 
-          <div class="form-section-title">Τιμολογηση</div>
+          <div class="form-section-title">Τιμολόγηση</div>
           <div class="form-field full">
             <div class="radio-row">
               <label class="radio-opt"><input type="radio" name="billingType" value="receipt" checked> Απόδειξη</label>
@@ -1023,7 +1069,17 @@ document.querySelectorAll('.sort-btn').forEach(btn=>{
   });
 });
 
-render();
+// 👉 ΑΡΧΙΚΟΠΟΙΗΣΗ: φορτώνει τα ξενοδοχεία ζωντανά από τη βάση πριν κάνει το πρώτο render.
+document.getElementById('cards').innerHTML =
+  `<div style="padding:40px;text-align:center;color:var(--ink-mute)">Φόρτωση ξενοδοχείων…</div>`;
+
+loadHotels()
+  .then(render)
+  .catch(err=>{
+    console.error('Failed to load hotels:', err);
+    document.getElementById('cards').innerHTML =
+      `<div style="padding:40px;text-align:center;color:var(--red)">Δεν ήταν δυνατή η φόρτωση των ξενοδοχείων. Δοκίμασε ανανέωση της σελίδας.</div>`;
+  });
 </script>
 
 </body>

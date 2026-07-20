@@ -8,6 +8,15 @@ body {
 }
 
 /*
+ * Belt-and-suspenders: prevent any table from creating a horizontal
+ * scrollbar regardless of content width. Combined with table-layout:fixed
+ * in the components, content truncates/clips instead of scrolling.
+ */
+.tbl-wrap > div {
+  overflow-x: hidden !important;
+}
+
+/*
  * Native date / time inputs:
  * Without color-scheme the browser always renders the picker popup and
  * the internal date-part text in light mode, making them invisible on a

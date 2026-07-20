@@ -7,7 +7,7 @@ export type Booking = {
   checkout: string | null
   amount: number | null
   companion: string | null
-  status: "paid" | "pending" | "cancelled" | "confirmed" | "waitlisted" | "hosted"
+  status: "paid" | "pending" | "cancelled" | "waitlisted" | "hosted"
   email: string | null
   mobile: string | null
   guests: number | null
