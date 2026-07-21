@@ -11,12 +11,12 @@ import { Skeleton } from "../../lib/shadcn/skeleton"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "../../lib/shadcn/table"
+import { useLanguage } from "../../utils/LanguageContext"
 import type { Change } from "../data/types"
 
 type ColMeta = { className?: string }
 
 function fmtDatetime(d: string) {
-  // Short format: "12/05/24 14:30"
   const dt = new Date(d)
   const date = dt.toLocaleDateString("el-GR", { day: "2-digit", month: "2-digit", year: "2-digit" })
   const time = dt.toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" })
@@ -34,19 +34,20 @@ type ChangesSectionProps = {
 }
 
 export default function ChangesSection({ changes, loading, onHeaderClick }: ChangesSectionProps) {
+  const { t } = useLanguage()
   const [sorting, setSorting] = useState<SortingState>([{ id: "changed_at", desc: true }])
 
   const columns = useMemo<ColumnDef<Change>[]>(() => [
     {
       accessorKey: "guest_name",
-      header: "Επισκέπτης",
+      header: t.guestName,
       cell: ({ getValue }) => (
         <span className="font-medium text-foreground block w-full min-w-0 truncate">{getValue<string>()}</span>
       ),
     },
     {
       accessorKey: "hotel",
-      header: "Ξενοδοχείο",
+      header: t.hotel,
       meta: { className: "hidden sm:table-cell" } satisfies ColMeta,
       cell: ({ getValue }) => (
         <span className="block w-full min-w-0 truncate text-muted-foreground text-xs">{getValue<string>()}</span>
@@ -54,7 +55,7 @@ export default function ChangesSection({ changes, loading, onHeaderClick }: Chan
     },
     {
       accessorKey: "changed_by",
-      header: "Χρήστης",
+      header: t.colUser,
       meta: { className: "hidden md:table-cell" } satisfies ColMeta,
       cell: ({ getValue }) => (
         <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground block w-full min-w-0 truncate">
@@ -64,7 +65,7 @@ export default function ChangesSection({ changes, loading, onHeaderClick }: Chan
     },
     {
       accessorKey: "changed_at",
-      header: "Ημ/νία",
+      header: t.colDate,
       meta: { className: "hidden sm:table-cell" } satisfies ColMeta,
       cell: ({ getValue }) => (
         <span className="text-xs text-muted-foreground tabular-nums">
@@ -74,14 +75,14 @@ export default function ChangesSection({ changes, loading, onHeaderClick }: Chan
     },
     {
       accessorKey: "change_description",
-      header: "Περιγραφή",
+      header: t.colDescription,
       cell: ({ getValue }) => (
         <span className="block w-full min-w-0 truncate text-sm text-foreground">{getValue<string>()}</span>
       ),
     },
     {
       accessorKey: "old_value",
-      header: "Παλιά",
+      header: t.colOldValue,
       meta: { className: "hidden lg:table-cell" } satisfies ColMeta,
       cell: ({ getValue }) => (
         <span className="block w-full min-w-0 truncate text-xs text-muted-foreground line-through decoration-muted-foreground/50">
@@ -91,7 +92,7 @@ export default function ChangesSection({ changes, loading, onHeaderClick }: Chan
     },
     {
       accessorKey: "new_value",
-      header: "Νέα",
+      header: t.colNewValue,
       meta: { className: "hidden lg:table-cell" } satisfies ColMeta,
       cell: ({ getValue }) => (
         <span className="block w-full min-w-0 truncate text-xs font-medium text-foreground">{getValue<string>()}</span>
@@ -99,7 +100,7 @@ export default function ChangesSection({ changes, loading, onHeaderClick }: Chan
     },
     {
       accessorKey: "amount_delta",
-      header: "Διαφορά",
+      header: t.colDifference,
       cell: ({ getValue, row }) => {
         const delta = getValue<number>()
         const c = row.original
@@ -116,13 +117,13 @@ export default function ChangesSection({ changes, loading, onHeaderClick }: Chan
               {c.requires_payment === "yes" && (
                 <Badge variant="outline" className="text-[10px] py-0 px-1 bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-700 flex items-center gap-0.5">
                   <ArrowUpRight className="w-2.5 h-2.5" />
-                  <span className="hidden sm:inline">Πληρ.</span>
+                  <span className="hidden sm:inline">{t.requiresPayment}</span>
                 </Badge>
               )}
               {c.requires_refund === "yes" && (
                 <Badge variant="outline" className="text-[10px] py-0 px-1 bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-700 flex items-center gap-0.5">
                   <ArrowDownRight className="w-2.5 h-2.5" />
-                  <span className="hidden sm:inline">Επιστ.</span>
+                  <span className="hidden sm:inline">{t.requiresRefund}</span>
                 </Badge>
               )}
             </div>
@@ -130,7 +131,7 @@ export default function ChangesSection({ changes, loading, onHeaderClick }: Chan
         )
       },
     },
-  ], [])
+  ], [t])
 
   const table = useReactTable({
     data: changes,
@@ -149,11 +150,11 @@ export default function ChangesSection({ changes, loading, onHeaderClick }: Chan
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <History className="w-4 h-4 text-muted-foreground" />
-            <CardTitle className="text-base font-semibold">Λίστα Αλλαγών</CardTitle>
+            <CardTitle className="text-base font-semibold">{t.changesLog}</CardTitle>
           </div>
           {onHeaderClick && (
             <button onClick={onHeaderClick} className="text-xs text-primary hover:underline font-medium shrink-0">
-              Προβολή όλων
+              {t.viewAll}
             </button>
           )}
         </div>
@@ -165,7 +166,6 @@ export default function ChangesSection({ changes, loading, onHeaderClick }: Chan
           </div>
         ) : (
           <>
-            {/* [&>div]:!overflow-x-hidden overrides shadcn's inner overflow-auto wrapper */}
             <div className="[&>div]:!overflow-x-hidden min-w-0">
               <Table className="table-fixed w-full">
                 <TableHeader>
@@ -190,7 +190,7 @@ export default function ChangesSection({ changes, loading, onHeaderClick }: Chan
                   {table.getRowModel().rows.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={columns.length} className="py-10 text-center text-sm text-muted-foreground">
-                        Δεν υπάρχουν αλλαγές.
+                        {t.noChanges}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -198,7 +198,7 @@ export default function ChangesSection({ changes, loading, onHeaderClick }: Chan
                       <TableRow key={row.id} className="hover:bg-muted/40 transition-colors">
                         {row.getVisibleCells().map((cell) => (
                           <TableCell key={cell.id}
-                            className={`px-2 sm:px-4 py-2.5 text-sm overflow-hidden ${(cell.column.columnDef.meta as ColMeta | undefined)?.className ?? ""}`}
+                            className={`px-2 sm:px-4 py-2.5 text-sm text-muted-foreground overflow-hidden ${(cell.column.columnDef.meta as ColMeta | undefined)?.className ?? ""}`}
                           >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </TableCell>
@@ -210,17 +210,19 @@ export default function ChangesSection({ changes, loading, onHeaderClick }: Chan
               </Table>
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-5 py-3 border-t border-border">
-              <p className="text-sm text-muted-foreground">{changes.length} αλλαγές</p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-4 border-t border-border">
+              <p className="text-sm text-muted-foreground">
+                {table.getFilteredRowModel().rows.length} {t.bookingsCount}
+              </p>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-                  Προηγ.
+                  {t.prev}
                 </Button>
                 <span className="text-sm text-muted-foreground whitespace-nowrap">
-                  Σελ. {table.getState().pagination.pageIndex + 1} / {Math.max(1, table.getPageCount())}
+                  {t.page} {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
                 </span>
                 <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-                  Επόμ.
+                  {t.next}
                 </Button>
               </div>
             </div>

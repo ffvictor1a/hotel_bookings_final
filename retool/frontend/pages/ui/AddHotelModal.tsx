@@ -8,17 +8,17 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../../lib/shadcn/select"
 import { useAddHotel } from "../../hooks/backend/hotels"
+import { useLanguage } from "../../utils/LanguageContext"
+import type { Translations } from "../../utils/translations"
 
 const ROOM_TYPES = ["Μονόκλινο", "Δίκλινο", "Τρίκλινο"]
 
-// Stable key counter — incremented each time a new room entry is created
-// so React never reuses a DOM node from a different row.
 let _keyCounter = 0
 function nextKey() { return ++_keyCounter }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type RoomEntry = {
-  _key: number        // stable React key, never changes for the lifetime of this row
+  _key: number
   room_type: string
   total_allotment: string
   price_per_night: string
@@ -29,7 +29,7 @@ type FormState = {
   hotel_name: string
   location: string
   phone: string
-  stars: number       // 0 = unset
+  stars: number
   room_types: RoomEntry[]
 }
 
@@ -41,7 +41,23 @@ function initialForm(): FormState {
   return { hotel_name: "", location: "", phone: "", stars: 0, room_types: [emptyRoom()] }
 }
 
-// ── Small field wrapper ───────────────────────────────────────────────────────
+// ── Validation ────────────────────────────────────────────────────────────────
+function validateForm(form: FormState, t: Translations): Record<string, string> {
+  const errs: Record<string, string> = {}
+  if (!form.hotel_name.trim()) errs["hotel_name"] = t.validHotelNameRequired
+
+  form.room_types.forEach((rt, idx) => {
+    if (!rt.room_type) errs[`rt_${idx}_room_type`] = t.validRequired
+    if (!rt.total_allotment || Number(rt.total_allotment) < 1)
+      errs[`rt_${idx}_total_allotment`] = t.validAllotmentMin
+    if (!rt.price_per_night || Number(rt.price_per_night) < 0)
+      errs[`rt_${idx}_price_per_night`] = t.validRequired
+    if (!rt.deadline) errs[`rt_${idx}_deadline`] = t.validRequired
+  })
+  return errs
+}
+
+// ── Field wrapper ─────────────────────────────────────────────────────────────
 function FieldWrap({
   label, error, children,
 }: { label: string; error?: string | undefined; children: React.ReactNode }) {
@@ -54,10 +70,7 @@ function FieldWrap({
   )
 }
 
-// ── Room type row sub-component ───────────────────────────────────────────────
-// Extracted as its own component (like ManualBookingModal's RoomRow) so React
-// tracks it independently. Each instance owns its own reconciliation identity
-// through the stable `_key` used as the React key by the parent.
+// ── Room type row ─────────────────────────────────────────────────────────────
 type RoomTypeRowProps = {
   idx: number
   entry: RoomEntry
@@ -68,17 +81,17 @@ type RoomTypeRowProps = {
 }
 
 function RoomTypeRow({ idx, entry, errors, canRemove, onRemove, onChange }: RoomTypeRowProps) {
+  const { t } = useLanguage()
   return (
     <div className="p-4 rounded-lg border border-border bg-muted/20 space-y-3">
-      {/* Header with label + remove button — only shown when there are multiple rows */}
       {canRemove && (
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-foreground">Τύπος {idx + 1}</span>
+          <span className="text-sm font-semibold text-foreground">{t.roomTypeIndex} {idx + 1}</span>
           <button
             type="button"
             onClick={onRemove}
             className="text-muted-foreground hover:text-destructive transition-colors"
-            aria-label="Αφαίρεση τύπου δωματίου"
+            aria-label={t.removeRoomTypeAriaLabel}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -86,25 +99,23 @@ function RoomTypeRow({ idx, entry, errors, canRemove, onRemove, onChange }: Room
       )}
 
       <div className="grid grid-cols-2 gap-3">
-        {/* Room type dropdown */}
         <div className="col-span-2">
-          <FieldWrap label="Τύπος δωματίου *" error={errors[`rt_${idx}_room_type`]}>
+          <FieldWrap label={t.roomTypeFieldLabel} error={errors[`rt_${idx}_room_type`]}>
             <Select
               {...(entry.room_type ? { value: entry.room_type } : {})}
               onValueChange={(v) => onChange("room_type", v)}
             >
               <SelectTrigger className={errors[`rt_${idx}_room_type`] ? "border-destructive" : ""}>
-                <SelectValue placeholder="Επιλέξτε τύπο" />
+                <SelectValue placeholder={t.selectType} />
               </SelectTrigger>
               <SelectContent>
-                {ROOM_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                {ROOM_TYPES.map((rt) => <SelectItem key={rt} value={rt}>{rt}</SelectItem>)}
               </SelectContent>
             </Select>
           </FieldWrap>
         </div>
 
-        {/* Allotment */}
-        <FieldWrap label="Allotment *" error={errors[`rt_${idx}_total_allotment`]}>
+        <FieldWrap label={t.allotmentLabel} error={errors[`rt_${idx}_total_allotment`]}>
           <Input
             type="number" min={1}
             value={entry.total_allotment}
@@ -114,8 +125,7 @@ function RoomTypeRow({ idx, entry, errors, canRemove, onRemove, onChange }: Room
           />
         </FieldWrap>
 
-        {/* Price per night */}
-        <FieldWrap label="Τιμή/νύχτα (€) *" error={errors[`rt_${idx}_price_per_night`]}>
+        <FieldWrap label={t.pricePerNightLabel} error={errors[`rt_${idx}_price_per_night`]}>
           <Input
             type="number" min={0}
             value={entry.price_per_night}
@@ -125,9 +135,8 @@ function RoomTypeRow({ idx, entry, errors, canRemove, onRemove, onChange }: Room
           />
         </FieldWrap>
 
-        {/* Deadline */}
         <div className="col-span-2">
-          <FieldWrap label="Deadline *" error={errors[`rt_${idx}_deadline`]}>
+          <FieldWrap label={t.deadlineLabel} error={errors[`rt_${idx}_deadline`]}>
             <Input
               type="date"
               value={entry.deadline}
@@ -149,6 +158,7 @@ type Props = {
 }
 
 export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
+  const { t } = useLanguage()
   const [form, setForm] = useState<FormState>(initialForm)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState(false)
@@ -177,11 +187,8 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
   function updateRoom(key: number, field: keyof Omit<RoomEntry, "_key">, value: string) {
     setForm((f) => ({
       ...f,
-      room_types: f.room_types.map((r) =>
-        r._key === key ? { ...r, [field]: value } : r
-      ),
+      room_types: f.room_types.map((r) => r._key === key ? { ...r, [field]: value } : r),
     }))
-    // clear the error for that field (find its index for the error key)
     setForm((f) => {
       const idx = f.room_types.findIndex((r) => r._key === key)
       if (idx >= 0) setErrors((e) => ({ ...e, [`rt_${idx}_${field}`]: "" }))
@@ -190,18 +197,7 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
   }
 
   function validate(): boolean {
-    const errs: Record<string, string> = {}
-    if (!form.hotel_name.trim()) errs["hotel_name"] = "Απαιτείται όνομα ξενοδοχείου"
-
-    form.room_types.forEach((rt, idx) => {
-      if (!rt.room_type) errs[`rt_${idx}_room_type`] = "Απαιτείται"
-      if (!rt.total_allotment || Number(rt.total_allotment) < 1)
-        errs[`rt_${idx}_total_allotment`] = "Απαιτείται (≥ 1)"
-      if (!rt.price_per_night || Number(rt.price_per_night) < 0)
-        errs[`rt_${idx}_price_per_night`] = "Απαιτείται"
-      if (!rt.deadline) errs[`rt_${idx}_deadline`] = "Απαιτείται"
-    })
-
+    const errs = validateForm(form, t)
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -214,7 +210,6 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
         location: form.location.trim(),
         phone: form.phone.trim(),
         stars: form.stars > 0 ? form.stars : null,
-        // All room entries are sent — the full array, not just the first/last
         room_types: form.room_types.map((rt) => ({
           room_type: rt.room_type,
           total_allotment: Number(rt.total_allotment),
@@ -234,13 +229,13 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose() }}>
       <DialogContent className="max-w-2xl w-full p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b border-border pr-14">
-          <DialogTitle className="text-base font-semibold">Προσθήκη Ξενοδοχείου</DialogTitle>
+          <DialogTitle className="text-base font-semibold">{t.addHotelTitle}</DialogTitle>
         </DialogHeader>
 
         {success ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <CheckCircle2 className="w-12 h-12 text-emerald-500" />
-            <p className="text-lg font-semibold text-foreground">Το ξενοδοχείο αποθηκεύτηκε!</p>
+            <p className="text-lg font-semibold text-foreground">{t.hotelSaved}</p>
           </div>
         ) : (
           <>
@@ -249,11 +244,11 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
               {/* ── Basic info ─────────────────────────────────────── */}
               <section className="space-y-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Βασικά στοιχεία
+                  {t.basicInfoSection}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
-                    <FieldWrap label="Όνομα ξενοδοχείου *" error={errors["hotel_name"]}>
+                    <FieldWrap label={t.hotelNameLabel} error={errors["hotel_name"]}>
                       <Input
                         value={form.hotel_name}
                         onChange={(e) => setField("hotel_name", e.target.value)}
@@ -262,18 +257,18 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
                       />
                     </FieldWrap>
                   </div>
-                  <FieldWrap label="Τοποθεσία">
+                  <FieldWrap label={t.locationLabel}>
                     <Input value={form.location}
                       onChange={(e) => setField("location", e.target.value)}
                       placeholder="π.χ. Γλυφάδα, Αθήνα" />
                   </FieldWrap>
-                  <FieldWrap label="Τηλέφωνο">
+                  <FieldWrap label={t.phoneLabel}>
                     <Input value={form.phone}
                       onChange={(e) => setField("phone", e.target.value)}
                       placeholder="π.χ. 210 123 4567" />
                   </FieldWrap>
                   <div className="sm:col-span-2 space-y-1">
-                    <Label className="text-sm font-medium text-foreground">Αστέρια</Label>
+                    <Label className="text-sm font-medium text-foreground">{t.starsLabel}</Label>
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((n) => (
                         <button key={n} type="button"
@@ -281,7 +276,7 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
                           className={`p-0.5 rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                             form.stars >= n ? "text-amber-400" : "text-muted-foreground/25 hover:text-amber-200"
                           }`}
-                          aria-label={`${n} αστέρια`}
+                          aria-label={t.starsAriaLabel.replace("{n}", String(n))}
                         >
                           <Star className={`w-7 h-7 ${form.stars >= n ? "fill-amber-400" : ""}`} />
                         </button>
@@ -300,20 +295,18 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
               <section className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Τύποι δωματίων
+                    {t.roomTypesSection}
                   </h3>
                   <Button type="button" variant="outline" size="sm"
                     onClick={addRoom}
                     className="gap-1.5 text-xs h-8">
                     <Plus className="w-3.5 h-3.5" />
-                    Πρόσθεσε τύπο δωματίου
+                    {t.addRoomTypeBtn}
                   </Button>
                 </div>
 
                 <div className="space-y-3">
                   {form.room_types.map((rt, idx) => (
-                    // key uses rt._key (stable, never the array index) so React
-                    // never reuses a row's DOM for a different row after removal.
                     <RoomTypeRow
                       key={rt._key}
                       idx={idx}
@@ -335,9 +328,9 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
             </div>
 
             <div className="px-6 py-4 border-t border-border flex items-center justify-end gap-3">
-              <Button variant="outline" onClick={handleClose} disabled={loading}>Άκυρο</Button>
+              <Button variant="outline" onClick={handleClose} disabled={loading}>{t.cancelBtn}</Button>
               <Button onClick={handleSave} disabled={loading}>
-                {loading ? "Αποθήκευση…" : "Αποθήκευση"}
+                {loading ? t.savingBtn : t.saveBtn}
               </Button>
             </div>
           </>

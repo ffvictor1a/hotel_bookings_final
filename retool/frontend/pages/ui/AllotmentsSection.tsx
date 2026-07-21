@@ -2,6 +2,7 @@ import { useMemo } from "react"
 import { BedDouble } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../lib/shadcn/card"
 import { Skeleton } from "../../lib/shadcn/skeleton"
+import { useLanguage } from "../../utils/LanguageContext"
 import type { AvailabilityRow } from "../data/types"
 
 function ProgressBar({ pct }: { pct: number }) {
@@ -23,6 +24,7 @@ function ProgressBar({ pct }: { pct: number }) {
 }
 
 function RemainingBadge({ remaining, total }: { remaining: number; total: number }) {
+  const { t } = useLanguage()
   const pct = total > 0 ? (1 - remaining / total) * 100 : 100
   const color =
     remaining === 0
@@ -33,7 +35,7 @@ function RemainingBadge({ remaining, total }: { remaining: number; total: number
 
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${color}`}>
-      {remaining === 0 ? "Sold out" : `${remaining} free`}
+      {remaining === 0 ? t.soldOut : `${remaining} ${t.freeRooms}`}
     </span>
   )
 }
@@ -44,6 +46,8 @@ type AllotmentsSectionProps = {
 }
 
 export default function AllotmentsSection({ rows, loading }: AllotmentsSectionProps) {
+  const { t } = useLanguage()
+
   // Group by hotel
   const byHotel = useMemo(() => {
     const map: Record<string, AvailabilityRow[]> = {}
@@ -58,7 +62,7 @@ export default function AllotmentsSection({ rows, loading }: AllotmentsSectionPr
     <section>
       <div className="flex items-center gap-2 mb-4">
         <BedDouble className="w-5 h-5 text-muted-foreground" />
-        <h2 className="text-base font-semibold text-foreground">Διαθέσιμα δωμάτια ανά τύπο</h2>
+        <h2 className="text-base font-semibold text-foreground">{t.availableRooms}</h2>
       </div>
 
       {loading ? (
@@ -83,7 +87,7 @@ export default function AllotmentsSection({ rows, loading }: AllotmentsSectionPr
                 <CardHeader className="pb-2 pt-4 px-5">
                   <CardTitle className="text-sm font-semibold leading-snug">{hotel}</CardTitle>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {hotelAvailable} από {hotelTotal} διαθέσιμα δωμάτια
+                    {hotelAvailable} {t.availableOf} {hotelTotal} {t.availableRoomsCount}
                   </p>
                 </CardHeader>
                 <CardContent className="px-5 pb-4 space-y-3">
