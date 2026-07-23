@@ -2,94 +2,94 @@
   "private": true,
   "retool": {
     "app": {
-      "uuid": "0e4c584c-804c-11f1-a50a-cb331c09458f",
+      "uuid": "9c5151ba-85a1-11f1-92e7-67684932975b",
       "name": null,
       "resourceReferencesByFile": {
         "/backend/allotments/getAllotments.ts": [
           {
-            "name": "ec520ccd-bacc-4bfd-b3b4-1429a46fcd28",
+            "name": "cd9c74e8-e4b6-4f4d-a5ba-8e39fb92e828",
             "displayName": "retool_db",
             "type": "retoolDb"
           }
         ],
         "/backend/allotments/getAvailability.ts": [
           {
-            "name": "ec520ccd-bacc-4bfd-b3b4-1429a46fcd28",
+            "name": "cd9c74e8-e4b6-4f4d-a5ba-8e39fb92e828",
             "displayName": "retool_db",
             "type": "retoolDb"
           }
         ],
         "/backend/bookings/cancelBooking.ts": [
           {
-            "name": "ec520ccd-bacc-4bfd-b3b4-1429a46fcd28",
+            "name": "cd9c74e8-e4b6-4f4d-a5ba-8e39fb92e828",
             "displayName": "retool_db",
             "type": "retoolDb"
           }
         ],
         "/backend/bookings/createBooking.ts": [
           {
-            "name": "ec520ccd-bacc-4bfd-b3b4-1429a46fcd28",
+            "name": "cd9c74e8-e4b6-4f4d-a5ba-8e39fb92e828",
             "displayName": "retool_db",
             "type": "retoolDb"
           }
         ],
         "/backend/bookings/getBookings.ts": [
           {
-            "name": "ec520ccd-bacc-4bfd-b3b4-1429a46fcd28",
+            "name": "cd9c74e8-e4b6-4f4d-a5ba-8e39fb92e828",
             "displayName": "retool_db",
             "type": "retoolDb"
           }
         ],
         "/backend/bookings/updateBooking.ts": [
           {
-            "name": "ec520ccd-bacc-4bfd-b3b4-1429a46fcd28",
+            "name": "cd9c74e8-e4b6-4f4d-a5ba-8e39fb92e828",
             "displayName": "retool_db",
             "type": "retoolDb"
           }
         ],
         "/backend/changes/getChanges.ts": [
           {
-            "name": "ec520ccd-bacc-4bfd-b3b4-1429a46fcd28",
+            "name": "cd9c74e8-e4b6-4f4d-a5ba-8e39fb92e828",
+            "displayName": "retool_db",
+            "type": "retoolDb"
+          }
+        ],
+        "/backend/hotels/addHotel.ts": [
+          {
+            "name": "cd9c74e8-e4b6-4f4d-a5ba-8e39fb92e828",
             "displayName": "retool_db",
             "type": "retoolDb"
           }
         ],
         "/backend/reports/getChangesReport.ts": [
           {
-            "name": "ec520ccd-bacc-4bfd-b3b4-1429a46fcd28",
+            "name": "cd9c74e8-e4b6-4f4d-a5ba-8e39fb92e828",
             "displayName": "retool_db",
             "type": "retoolDb"
           }
         ],
         "/backend/reports/getFullReport.ts": [
           {
-            "name": "ec520ccd-bacc-4bfd-b3b4-1429a46fcd28",
+            "name": "cd9c74e8-e4b6-4f4d-a5ba-8e39fb92e828",
             "displayName": "retool_db",
             "type": "retoolDb"
           }
         ],
         "/backend/reports/getPayments.ts": [
           {
-            "name": "ec520ccd-bacc-4bfd-b3b4-1429a46fcd28",
+            "name": "cd9c74e8-e4b6-4f4d-a5ba-8e39fb92e828",
             "displayName": "retool_db",
             "type": "retoolDb"
           }
         ],
         "/backend/reports/getRoomingList.ts": [
           {
-            "name": "ec520ccd-bacc-4bfd-b3b4-1429a46fcd28",
+            "name": "cd9c74e8-e4b6-4f4d-a5ba-8e39fb92e828",
             "displayName": "retool_db",
             "type": "retoolDb"
           }
         ],
-        "/backend/user.d.ts": [],
-        "/backend/hotels/addHotel.ts": [
-          {
-            "name": "ec520ccd-bacc-4bfd-b3b4-1429a46fcd28",
-            "displayName": "retool_db",
-            "type": "retoolDb"
-          }
-        ]
+        "/backend/user.d.ts": []
       }
     }
   }

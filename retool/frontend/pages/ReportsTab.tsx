@@ -4,6 +4,7 @@ import {
   getPaginationRowModel, SortingState, useReactTable,
 } from "@tanstack/react-table"
 import { Download, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react"
+import * as XLSX from "xlsx"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../lib/shadcn/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../lib/shadcn/select"
 import { Button } from "../lib/shadcn/button"
@@ -38,27 +39,13 @@ const STATUS_STYLE: Record<string, string> = {
   cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700",
 }
 
-// ── CSV export ────────────────────────────────────────────────────────────────
-function exportCsv(rows: Record<string, unknown>[], filename: string) {
+// ── Excel export ──────────────────────────────────────────────────────────────
+function exportExcel(rows: Record<string, unknown>[], filename: string) {
   if (rows.length === 0) return
-  const headers = Object.keys(rows[0]!)
-  const escape = (v: unknown) => {
-    const s = v == null ? "" : String(v)
-    return s.includes(",") || s.includes('"') || s.includes("\n")
-      ? `"${s.replace(/"/g, '""')}"`
-      : s
-  }
-  const csv = [
-    headers.join(","),
-    ...rows.map((r) => headers.map((h) => escape(r[h])).join(",")),
-  ].join("\n")
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement("a")
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
+  const ws = XLSX.utils.json_to_sheet(rows)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, "Data")
+  XLSX.writeFile(wb, filename.replace(/\.csv$/i, ".xlsx"))
 }
 
 // ── Status badge (translated) ─────────────────────────────────────────────────
@@ -126,7 +113,7 @@ function ReportTable<T extends Record<string, unknown>>({
           variant="outline"
           size="sm"
           className="flex items-center gap-2"
-          onClick={() => exportCsv(rows as Record<string, unknown>[], exportFilename)}
+          onClick={() => exportExcel(rows as Record<string, unknown>[], exportFilename)}
           disabled={loading || rows.length === 0}
         >
           <Download className="w-4 h-4" />

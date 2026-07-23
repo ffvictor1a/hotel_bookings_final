@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, type ReactNode } from "react"
 import { CheckCircle2, Plus, Trash2, AlertCircle } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../lib/shadcn/dialog"
 import { Label } from "../../lib/shadcn/label"
@@ -152,7 +152,7 @@ function Field({
   label: string
   error?: string | undefined
   hint?: string | undefined
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <div className="space-y-1">

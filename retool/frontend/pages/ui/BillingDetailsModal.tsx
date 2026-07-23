@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../lib/shadcn/dialog"
 import { Badge } from "../../lib/shadcn/badge"
 import { Separator } from "../../lib/shadcn/separator"
@@ -31,7 +32,7 @@ function fmtEur(n: number | null | undefined) {
   return new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(n)
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionTitle({ children }: { children: ReactNode }) {
   return <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{children}</h3>
 }
 

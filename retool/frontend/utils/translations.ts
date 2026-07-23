@@ -29,6 +29,31 @@ export const translations = {
     bookingsTooltip: "Κρατήσεις",
     bookingsForHotel: "Κρατήσεις",
 
+    // Room Type Stacked Chart
+    bookingsByRoomTypeTitle: "Κρατήσεις ανά Τύπο Δωματίου, ανά Ξενοδοχείο",
+    bookingsByRoomTypeSub: "Χωρίς waitlisted • Stacked ανά τύπο δωματίου",
+    noChartData: "Δεν υπάρχουν δεδομένα.",
+
+    // General Stats
+    generalStats: "Γενικά Στατιστικά",
+    avgAmountLabel: "Μέσος Όρος Ποσού",
+    avgAmountSub: "Paid / Hosted κρατήσεις",
+    avgNightsLabel: "Μέσος Όρος Διανυκτερεύσεων",
+    avgNightsUnit: "νύχτες",
+    cancellationRateLabel: "Ποσοστό Ακυρώσεων",
+    waitlistRateLabel: "Ποσοστό Waitlist",
+    perTotal: "επί του συνόλου",
+    topHotelLabel: "Πιο Δημοφιλές Ξενοδοχείο",
+    topRoomTypeLabel: "Πιο Δημοφιλής Τύπος Δωματίου",
+    noDataYet: "Δεν υπάρχουν δεδομένα ακόμα.",
+
+    // Available Rooms section header
+    availableRoomsTitle: "Διαθέσιμα Δωμάτια ανά Τύπο",
+    availableRoomsSub: "Allotments & διαθεσιμότητα",
+
+    // Booking Form
+    bookingFormBtn: "Φόρμα Κράτησης",
+
     // Allotments
     availableRooms: "Διαθέσιμα δωμάτια ανά τύπο",
     availableOf: "από",
@@ -95,7 +120,7 @@ export const translations = {
     noRecordsFound: "Δεν βρέθηκαν εγγραφές.",
     loadingText: "Φόρτωση…",
     records: "εγγραφές",
-    exportCsv: "Εξαγωγή CSV",
+    exportCsv: "Εξαγωγή Excel",
     errorPrefix: "Σφάλμα:",
 
     // Rooming columns
@@ -129,7 +154,7 @@ export const translations = {
     addRoomTypeBtn: "Πρόσθεσε τύπο δωματίου",
     roomTypeFieldLabel: "Τύπος δωματίου *",
     selectType: "Επιλέξτε τύπο",
-    allotmentLabel: "Allotment *",
+    allotmentLabel: "Διαθεσιμότητα *",
     pricePerNightLabel: "Τιμή/νύχτα (€) *",
     deadlineLabel: "Deadline *",
     saveBtn: "Αποθήκευση",
@@ -233,6 +258,31 @@ export const translations = {
     bookingsTooltip: "Bookings",
     bookingsForHotel: "Bookings",
 
+    // Room Type Stacked Chart
+    bookingsByRoomTypeTitle: "Bookings by Room Type per Hotel",
+    bookingsByRoomTypeSub: "Excluding waitlisted \u2022 Stacked by room type",
+    noChartData: "No data available.",
+
+    // General Stats
+    generalStats: "General Statistics",
+    avgAmountLabel: "Average Amount",
+    avgAmountSub: "Paid / Hosted bookings",
+    avgNightsLabel: "Average Nights",
+    avgNightsUnit: "nights",
+    cancellationRateLabel: "Cancellation Rate",
+    waitlistRateLabel: "Waitlist Rate",
+    perTotal: "of total",
+    topHotelLabel: "Most Popular Hotel",
+    topRoomTypeLabel: "Most Popular Room Type",
+    noDataYet: "No data yet.",
+
+    // Available Rooms section header
+    availableRoomsTitle: "Available Rooms by Type",
+    availableRoomsSub: "Allotments & availability",
+
+    // Booking Form
+    bookingFormBtn: "Booking Form",
+
     // Allotments
     availableRooms: "Available Rooms by Type",
     availableOf: "of",
@@ -299,7 +349,7 @@ export const translations = {
     noRecordsFound: "No records found.",
     loadingText: "Loading…",
     records: "records",
-    exportCsv: "Export CSV",
+    exportCsv: "Export Excel",
     errorPrefix: "Error:",
 
     // Rooming columns
@@ -333,7 +383,7 @@ export const translations = {
     addRoomTypeBtn: "Add room type",
     roomTypeFieldLabel: "Room type *",
     selectType: "Select type",
-    allotmentLabel: "Allotment *",
+    allotmentLabel: "Διαθεσιμότητα *",
     pricePerNightLabel: "Price/night (€) *",
     deadlineLabel: "Deadline *",
     saveBtn: "Save",

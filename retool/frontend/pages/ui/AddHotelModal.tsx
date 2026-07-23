@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { Plus, Trash2, CheckCircle2, Star } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../lib/shadcn/dialog"
 import { Label } from "../../lib/shadcn/label"
@@ -60,7 +60,7 @@ function validateForm(form: FormState, t: Translations): Record<string, string> 
 // ── Field wrapper ─────────────────────────────────────────────────────────────
 function FieldWrap({
   label, error, children,
-}: { label: string; error?: string | undefined; children: React.ReactNode }) {
+}: { label: string; error?: string | undefined; children: ReactNode }) {
   return (
     <div className="space-y-1">
       <Label className="text-sm font-medium text-foreground">{label}</Label>
