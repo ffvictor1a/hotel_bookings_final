@@ -9,12 +9,14 @@ type Params = {
   hotel_name: string
   location: string
   phone: string
+  hotel_email: string
   stars: number | null
+  email_notifications_enabled: boolean
   room_types: RoomTypeEntry[]
 }
 
 export default async function (req: { params: Params; user: User }) {
-  const { hotel_name, location, phone, stars, room_types } = req.params
+  const { hotel_name, location, phone, hotel_email, stars, email_notifications_enabled, room_types } = req.params
 
   // 1. Create hotels table if it doesn't exist
   await retoolDb.query(`
@@ -70,10 +72,10 @@ export default async function (req: { params: Params; user: User }) {
   //    allotments.id has no sequence, so compute it as MAX(id) + 1.
   for (const rt of room_types) {
     await retoolDb.query(
-      `INSERT INTO allotments (id, hotel, room_type, total_allotment, price_per_night, deadline)
+      `INSERT INTO allotments (id, hotel, room_type, total_allotment, price_per_night, deadline, hotel_email, email_notifications_enabled)
        VALUES (
          (SELECT COALESCE(MAX(id), 0) + 1 FROM allotments),
-         $1, $2, $3, $4, $5
+         $1, $2, $3, $4, $5, $6, $7
        )`,
       [
         hotel_name,
@@ -81,6 +83,8 @@ export default async function (req: { params: Params; user: User }) {
         Number(rt.total_allotment),
         Math.round(Number(rt.price_per_night)),
         rt.deadline,
+        hotel_email || null,
+        email_notifications_enabled ?? true,
       ]
     )
   }

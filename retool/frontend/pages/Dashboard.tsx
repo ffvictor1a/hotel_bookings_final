@@ -703,7 +703,6 @@ function DashboardContent() {
   const { data: bData, loading: bLoading, error: bError, trigger: bTrigger } = useGetBookings()
   const { data: aData, loading: aLoading, trigger: aTrigger } = useGetAvailability()
   const { data: cData, loading: cLoading, error: cError, trigger: cTrigger } = useGetChanges()
-
   useEffect(() => { bTrigger() }, [])
   useEffect(() => { aTrigger() }, [])
   useEffect(() => { cTrigger() }, [])

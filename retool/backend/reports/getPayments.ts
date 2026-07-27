@@ -11,7 +11,7 @@ export default async function (_req: { params: Record<string, never>; user: User
   const result = await retoolDb.query<PaymentRow>(
     `SELECT full_name, hotel, room_type, amount, status, created_at
      FROM "bookingsData"
-     ORDER BY created_at DESC`
+     ORDER BY hotel, checkin`
   )
   return result.data
 }

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react"
 import {
   ColumnDef, flexRender, getCoreRowModel, getSortedRowModel,
-  getPaginationRowModel, SortingState, useReactTable,
+  getGroupedRowModel, getExpandedRowModel, getPaginationRowModel,
+  SortingState, GroupingState, ExpandedState, useReactTable,
 } from "@tanstack/react-table"
-import { Download, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react"
+import { Download, ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight } from "lucide-react"
 import * as XLSX from "xlsx"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../lib/shadcn/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../lib/shadcn/select"
@@ -73,25 +74,34 @@ type ReportTableProps<T extends Record<string, unknown>> = {
   emptyText?: string
   /** Allow horizontal scroll inside the table (for wide tables like Full Report) */
   scrollable?: boolean
+  /** Column key to group rows by (renders expandable hotel sections) */
+  groupBy?: string
 }
 
-function ReportTable<T extends Record<string, unknown>>({
-  data, loading, error, columns, exportFilename, emptyText, scrollable = false,
-}: ReportTableProps<T>) {
+function ReportTable<T extends Record<string, unknown>>(
+  { data, loading, error, columns, exportFilename, emptyText, scrollable = false, groupBy }: ReportTableProps<T>
+) {
   const { t } = useLanguage()
   const [sorting, setSorting] = useState<SortingState>([])
+  // grouping state is fixed on mount (groupBy never changes at runtime)
+  const [grouping] = useState<GroupingState>(() => groupBy ? [groupBy] : [])
+  const [expanded, setExpanded] = useState<ExpandedState>(true) // all expanded by default
   const rows = data ?? []
   const resolvedEmptyText = emptyText ?? t.noRecordsFound
 
   const table = useReactTable({
     data: rows,
     columns,
-    state: { sorting },
+    state: { sorting, grouping, expanded },
     onSortingChange: setSorting,
+    onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getGroupedRowModel: getGroupedRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 10 } },
+    // When grouping is active use a very large page to avoid splitting groups
+    initialState: { pagination: { pageSize: groupBy ? 9999 : 10 } },
   })
 
   if (error) {
@@ -105,20 +115,34 @@ function ReportTable<T extends Record<string, unknown>>({
   return (
     <div className="space-y-3">
       {/* Export bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-sm text-muted-foreground">
           {loading ? t.loadingText : `${rows.length} ${t.records}`}
         </p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-          onClick={() => exportExcel(rows as Record<string, unknown>[], exportFilename)}
-          disabled={loading || rows.length === 0}
-        >
-          <Download className="w-4 h-4" />
-          {t.exportCsv}
-        </Button>
+        <div className="flex items-center gap-2">
+          {groupBy && (
+            <>
+              <Button variant="ghost" size="sm" className="h-8 text-xs px-2"
+                onClick={() => setExpanded(true)}>
+                {t.expandAll}
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 text-xs px-2"
+                onClick={() => setExpanded({})}>
+                {t.collapseAll}
+              </Button>
+            </>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => exportExcel(rows as Record<string, unknown>[], exportFilename)}
+            disabled={loading || rows.length === 0}
+          >
+            <Download className="w-4 h-4" />
+            {t.exportCsv}
+          </Button>
+        </div>
       </div>
 
       {/* Table */}
@@ -172,28 +196,56 @@ function ReportTable<T extends Record<string, unknown>>({
                 </TableCell>
               </TableRow>
             ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/40 transition-colors">
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className={scrollable
-                        ? "px-3 py-2.5 text-sm whitespace-nowrap"
-                        : "px-3 py-2.5 text-sm break-words"
-                      }
+              table.getRowModel().rows.map((row) => {
+                // ── Group header row ────────────────────────────────
+                if (row.getIsGrouped()) {
+                  const groupValue = row.getValue(groupBy!)
+                  return (
+                    <TableRow
+                      key={row.id}
+                      className="bg-muted/60 hover:bg-muted/80 cursor-pointer border-b-2 border-border"
+                      onClick={() => row.toggleExpanded()}
                     >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+                      <TableCell colSpan={columns.length} className="px-3 py-2.5">
+                        <div className="flex items-center gap-2 font-semibold text-sm text-foreground select-none">
+                          {row.getIsExpanded()
+                            ? <ChevronDown className="w-4 h-4 text-primary shrink-0" />
+                            : <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                          }
+                          <span>{String(groupValue ?? "—")}</span>
+                          <span className="ml-1 text-xs font-normal text-muted-foreground tabular-nums">
+                            ({row.subRows.length} {t.records})
+                          </span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                }
+                // ── Leaf row ────────────────────────────────────────
+                return (
+                  <TableRow key={row.id} className="hover:bg-muted/40 transition-colors">
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className={scrollable
+                          ? "px-3 py-2.5 text-sm whitespace-nowrap"
+                          : "px-3 py-2.5 text-sm break-words"
+                        }
+                        style={scrollable ? { minWidth: cell.column.getSize() } : undefined}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                )
+              })
             )}
           </TableBody>
         </Table>
       </div>
 
-      {/* Pagination */}
-      {!loading && rows.length > 0 && (
+      {/* Pagination — hidden when groupBy is active */}
+      {!loading && rows.length > 0 && !groupBy && (
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
             {t.page} {table.getState().pagination.pageIndex + 1} / {Math.max(1, table.getPageCount())}
@@ -350,6 +402,7 @@ function FullReportTab() {
       columns={columns}
       exportFilename="full-report.csv"
       scrollable
+      groupBy="hotel"
     />
   )
 }
@@ -397,6 +450,7 @@ function PaymentsTab() {
       error={error}
       columns={columns as ColumnDef<Record<string, unknown>>[]}
       exportFilename="payments.csv"
+      groupBy="hotel"
     />
   )
 }

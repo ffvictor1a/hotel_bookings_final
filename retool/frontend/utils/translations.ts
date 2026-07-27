@@ -121,6 +121,8 @@ export const translations = {
     loadingText: "Φόρτωση…",
     records: "εγγραφές",
     exportCsv: "Εξαγωγή Excel",
+    expandAll: "Εκτίναξη όλων",
+    collapseAll: "Σύμπτυξη όλων",
     errorPrefix: "Σφάλμα:",
 
     // Rooming columns
@@ -148,6 +150,8 @@ export const translations = {
     hotelNameLabel: "Όνομα ξενοδοχείου *",
     locationLabel: "Τοποθεσία",
     phoneLabel: "Τηλέφωνο",
+    hotelEmailLabel: "Email επικοινωνίας ξενοδοχείου *",
+    emailNotificationsLabel: "Αποστολή email σε κάθε κράτηση",
     starsLabel: "Αστέρια",
     starsAriaLabel: "{n} αστέρια",
     roomTypesSection: "Τυποι δωματιων",
@@ -165,6 +169,7 @@ export const translations = {
     roomTypeIndex: "Τύπος",
     validRequired: "Απαιτείται",
     validHotelNameRequired: "Απαιτείται όνομα ξενοδοχείου",
+    validHotelEmailRequired: "Απαιτείται έγκυρο email",
     validAllotmentMin: "Απαιτείται (≥ 1)",
 
     // ── ManualBookingModal ──
@@ -350,6 +355,8 @@ export const translations = {
     loadingText: "Loading…",
     records: "records",
     exportCsv: "Export Excel",
+    expandAll: "Expand all",
+    collapseAll: "Collapse all",
     errorPrefix: "Error:",
 
     // Rooming columns
@@ -377,6 +384,8 @@ export const translations = {
     hotelNameLabel: "Hotel name *",
     locationLabel: "Location",
     phoneLabel: "Phone",
+    hotelEmailLabel: "Hotel contact email *",
+    emailNotificationsLabel: "Send email on every booking",
     starsLabel: "Stars",
     starsAriaLabel: "{n} stars",
     roomTypesSection: "Room Types",
@@ -394,6 +403,7 @@ export const translations = {
     roomTypeIndex: "Type",
     validRequired: "Required",
     validHotelNameRequired: "Hotel name required",
+    validHotelEmailRequired: "Valid email required",
     validAllotmentMin: "Required (≥ 1)",
 
     // ── ManualBookingModal ──

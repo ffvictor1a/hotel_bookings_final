@@ -89,7 +89,9 @@
             "type": "retoolDb"
           }
         ],
-        "/backend/user.d.ts": []
+        "/backend/user.d.ts": [],
+        "/backend/settings/getNotificationMode.ts": [],
+        "/backend/settings/setNotificationMode.ts": []
       }
     }
   }

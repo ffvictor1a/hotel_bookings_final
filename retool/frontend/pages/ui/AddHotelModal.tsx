@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react"
-import { Plus, Trash2, CheckCircle2, Star } from "lucide-react"
+import { Plus, Trash2, CheckCircle2, Star, Mail } from "lucide-react"
+import { Switch } from "../../lib/shadcn/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../lib/shadcn/dialog"
 import { Label } from "../../lib/shadcn/label"
 import { Input } from "../../lib/shadcn/input"
@@ -29,7 +30,9 @@ type FormState = {
   hotel_name: string
   location: string
   phone: string
+  hotel_email: string
   stars: number
+  email_notifications_enabled: boolean
   room_types: RoomEntry[]
 }
 
@@ -38,13 +41,17 @@ function emptyRoom(): RoomEntry {
 }
 
 function initialForm(): FormState {
-  return { hotel_name: "", location: "", phone: "", stars: 0, room_types: [emptyRoom()] }
+  return { hotel_name: "", location: "", phone: "", hotel_email: "", stars: 0, email_notifications_enabled: true, room_types: [emptyRoom()] }
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 function validateForm(form: FormState, t: Translations): Record<string, string> {
   const errs: Record<string, string> = {}
   if (!form.hotel_name.trim()) errs["hotel_name"] = t.validHotelNameRequired
+  if (!form.hotel_email.trim() || !EMAIL_RE.test(form.hotel_email.trim()))
+    errs["hotel_email"] = t.validHotelEmailRequired
 
   form.room_types.forEach((rt, idx) => {
     if (!rt.room_type) errs[`rt_${idx}_room_type`] = t.validRequired
@@ -209,7 +216,9 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
         hotel_name: form.hotel_name.trim(),
         location: form.location.trim(),
         phone: form.phone.trim(),
+        hotel_email: form.hotel_email.trim(),
         stars: form.stars > 0 ? form.stars : null,
+        email_notifications_enabled: form.email_notifications_enabled,
         room_types: form.room_types.map((rt) => ({
           room_type: rt.room_type,
           total_allotment: Number(rt.total_allotment),
@@ -267,6 +276,36 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
                       onChange={(e) => setField("phone", e.target.value)}
                       placeholder="π.χ. 210 123 4567" />
                   </FieldWrap>
+                  <div className="sm:col-span-2">
+                    <FieldWrap label={t.hotelEmailLabel} error={errors["hotel_email"]}>
+                      <Input
+                        type="email"
+                        value={form.hotel_email}
+                        onChange={(e) => setField("hotel_email", e.target.value)}
+                        placeholder="π.χ. info@hotel.gr"
+                        className={errors["hotel_email"] ? "border-destructive" : ""}
+                      />
+                    </FieldWrap>
+                  </div>
+                  {/* ── Email notifications toggle ── */}
+                  <div className="sm:col-span-2">
+                    <label
+                      htmlFor="email-notif-toggle"
+                      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-4 py-3 cursor-pointer select-none"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="text-sm font-medium text-foreground">
+                          {t.emailNotificationsLabel}
+                        </span>
+                      </div>
+                      <Switch
+                        id="email-notif-toggle"
+                        checked={form.email_notifications_enabled}
+                        onCheckedChange={(v) => setField("email_notifications_enabled", v)}
+                      />
+                    </label>
+                  </div>
                   <div className="sm:col-span-2 space-y-1">
                     <Label className="text-sm font-medium text-foreground">{t.starsLabel}</Label>
                     <div className="flex items-center gap-1">
