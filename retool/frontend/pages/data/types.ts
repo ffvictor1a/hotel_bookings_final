@@ -41,6 +41,8 @@ export type AvailabilityRow = {
   total_allotment: number
   booked_count: number
   available: number
+  stars: number | null
+  breakfast_included: boolean | null
 }
 
 export type Change = {

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react"
-import { Plus, Trash2, CheckCircle2, Star, Mail } from "lucide-react"
+import { Plus, Trash2, CheckCircle2, Mail, Coffee } from "lucide-react"
 import { Switch } from "../../lib/shadcn/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../lib/shadcn/dialog"
 import { Label } from "../../lib/shadcn/label"
@@ -31,8 +31,9 @@ type FormState = {
   location: string
   phone: string
   hotel_email: string
-  stars: number
+  stars: number | null
   email_notifications_enabled: boolean
+  breakfast_included: boolean
   room_types: RoomEntry[]
 }
 
@@ -41,7 +42,16 @@ function emptyRoom(): RoomEntry {
 }
 
 function initialForm(): FormState {
-  return { hotel_name: "", location: "", phone: "", hotel_email: "", stars: 0, email_notifications_enabled: true, room_types: [emptyRoom()] }
+  return {
+    hotel_name: "",
+    location: "",
+    phone: "",
+    hotel_email: "",
+    stars: null,
+    email_notifications_enabled: true,
+    breakfast_included: true,
+    room_types: [emptyRoom()],
+  }
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────
@@ -52,6 +62,8 @@ function validateForm(form: FormState, t: Translations): Record<string, string> 
   if (!form.hotel_name.trim()) errs["hotel_name"] = t.validHotelNameRequired
   if (!form.hotel_email.trim() || !EMAIL_RE.test(form.hotel_email.trim()))
     errs["hotel_email"] = t.validHotelEmailRequired
+  if (form.stars === null)
+    errs["stars"] = t.validRequired
 
   form.room_types.forEach((rt, idx) => {
     if (!rt.room_type) errs[`rt_${idx}_room_type`] = t.validRequired
@@ -217,8 +229,9 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
         location: form.location.trim(),
         phone: form.phone.trim(),
         hotel_email: form.hotel_email.trim(),
-        stars: form.stars > 0 ? form.stars : null,
+        stars: form.stars,
         email_notifications_enabled: form.email_notifications_enabled,
+        breakfast_included: form.breakfast_included,
         room_types: form.room_types.map((rt) => ({
           room_type: rt.room_type,
           total_allotment: Number(rt.total_allotment),
@@ -287,6 +300,46 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
                       />
                     </FieldWrap>
                   </div>
+
+                  {/* ── Hotel category dropdown ── */}
+                  <div className="sm:col-span-2">
+                    <FieldWrap label={t.hotelCategoryLabel} error={errors["stars"]}>
+                      <Select
+                        {...(form.stars !== null ? { value: String(form.stars) } : {})}
+                        onValueChange={(v) => setField("stars", Number(v))}
+                      >
+                        <SelectTrigger className={errors["stars"] ? "border-destructive" : ""}>
+                          <SelectValue placeholder={t.selectCategory} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="3">{t.stars3}</SelectItem>
+                          <SelectItem value="4">{t.stars4}</SelectItem>
+                          <SelectItem value="5">{t.stars5}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FieldWrap>
+                  </div>
+
+                  {/* ── Breakfast toggle ── */}
+                  <div className="sm:col-span-2">
+                    <label
+                      htmlFor="breakfast-toggle"
+                      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-4 py-3 cursor-pointer select-none"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Coffee className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="text-sm font-medium text-foreground">
+                          {t.breakfastIncludedLabel}
+                        </span>
+                      </div>
+                      <Switch
+                        id="breakfast-toggle"
+                        checked={form.breakfast_included}
+                        onCheckedChange={(v) => setField("breakfast_included", v)}
+                      />
+                    </label>
+                  </div>
+
                   {/* ── Email notifications toggle ── */}
                   <div className="sm:col-span-2">
                     <label
@@ -305,27 +358,6 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
                         onCheckedChange={(v) => setField("email_notifications_enabled", v)}
                       />
                     </label>
-                  </div>
-                  <div className="sm:col-span-2 space-y-1">
-                    <Label className="text-sm font-medium text-foreground">{t.starsLabel}</Label>
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <button key={n} type="button"
-                          onClick={() => setField("stars", form.stars === n ? 0 : n)}
-                          className={`p-0.5 rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                            form.stars >= n ? "text-amber-400" : "text-muted-foreground/25 hover:text-amber-200"
-                          }`}
-                          aria-label={t.starsAriaLabel.replace("{n}", String(n))}
-                        >
-                          <Star className={`w-7 h-7 ${form.stars >= n ? "fill-amber-400" : ""}`} />
-                        </button>
-                      ))}
-                      {form.stars > 0 && (
-                        <span className="ml-2 text-sm text-muted-foreground tabular-nums">
-                          {form.stars}/5
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
               </section>

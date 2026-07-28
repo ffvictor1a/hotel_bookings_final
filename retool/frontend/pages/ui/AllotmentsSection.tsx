@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { BedDouble } from "lucide-react"
+import { BedDouble, Coffee } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../lib/shadcn/card"
 import { Skeleton } from "../../lib/shadcn/skeleton"
 import { useLanguage } from "../../utils/LanguageContext"
@@ -81,11 +81,42 @@ export default function AllotmentsSection({ rows, loading }: AllotmentsSectionPr
           {byHotel.map(([hotel, hotelRows]) => {
             const hotelTotal = hotelRows.reduce((s, r) => s + r.total_allotment, 0)
             const hotelAvailable = hotelRows.reduce((s, r) => s + r.available, 0)
+            const hotelStars = hotelRows[0]?.stars ?? null
+            const breakfastIncluded = hotelRows[0]?.breakfast_included ?? null
+
+            // Stars label: 3★, 4★, 5★
+            const starsLabel = hotelStars !== null && hotelStars > 0
+              ? `${hotelStars}★`
+              : null
 
             return (
               <Card key={hotel} className="overflow-hidden">
                 <CardHeader className="pb-2 pt-4 px-5">
                   <CardTitle className="text-sm font-semibold leading-snug">{hotel}</CardTitle>
+
+                  {/* Stars + breakfast badges */}
+                  {(starsLabel !== null || breakfastIncluded !== null) && (
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      {starsLabel !== null && (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                          {starsLabel}
+                        </span>
+                      )}
+                      {breakfastIncluded !== null && (
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                          breakfastIncluded
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                            : "bg-muted text-muted-foreground"
+                        }`}>
+                          {breakfastIncluded
+                            ? <><Coffee className="w-3 h-3" />{t.withBreakfast}</>
+                            : t.withoutBreakfast
+                          }
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {hotelAvailable} {t.availableOf} {hotelTotal} {t.availableRoomsCount}
                   </p>

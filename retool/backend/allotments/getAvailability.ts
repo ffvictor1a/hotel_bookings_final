@@ -4,6 +4,8 @@ type AvailabilityRow = {
   total_allotment: number
   booked_count: number
   available: number
+  stars: number | null
+  breakfast_included: boolean | null
 }
 
 type RawRow = {
@@ -12,6 +14,8 @@ type RawRow = {
   total_allotment: number
   booked_count: string | number
   available: string | number
+  stars: number | null
+  breakfast_included: boolean | null
 }
 
 export default async function (_req: { params: Record<string, never>; user: User }) {
@@ -20,11 +24,13 @@ export default async function (_req: { params: Record<string, never>; user: User
       a.hotel, 
       a.room_type, 
       a.total_allotment,
+      a.stars,
+      a.breakfast_included,
       COUNT(b.id) FILTER (WHERE b.status IN ('paid','confirmed')) AS booked_count,
       a.total_allotment - COUNT(b.id) FILTER (WHERE b.status IN ('paid','confirmed')) AS available
     FROM allotments a
     LEFT JOIN "bookingsData" b ON b.hotel = a.hotel AND b.room_type = a.room_type
-    GROUP BY a.hotel, a.room_type, a.total_allotment
+    GROUP BY a.hotel, a.room_type, a.total_allotment, a.stars, a.breakfast_included
     ORDER BY a.hotel, a.room_type
   `)
 
@@ -34,5 +40,7 @@ export default async function (_req: { params: Record<string, never>; user: User
     total_allotment: Number(row.total_allotment),
     booked_count: Number(row.booked_count),
     available: Number(row.available),
+    stars: row.stars != null ? Number(row.stars) : null,
+    breakfast_included: row.breakfast_included ?? null,
   }))
 }
