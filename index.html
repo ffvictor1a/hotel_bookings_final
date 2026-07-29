@@ -686,6 +686,7 @@ function hotelSelectOptions(){
 }
 
 function buildBookingModal(){
+  let pendingBookingData = null; // κρατά τα στοιχεία της φόρμας ανάμεσα στο "Υποβολή" και το "Επιβεβαίωση & Πληρωμή"
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.id = 'bookingOverlay';
@@ -834,6 +835,24 @@ function buildBookingModal(){
         </div>
       </form>
 
+      <!-- 👉 ΒΗΜΑ ΕΠΙΣΚΟΠΗΣΗΣ — εμφανίζεται μετά το "Υποβολή Κράτησης", ΠΡΙΝ
+           φύγει οποιοδήποτε δεδομένο προς τη βάση/Stripe. Ο χρήστης μπορεί να
+           πατήσει "Πίσω" για να διορθώσει κάτι (η φόρμα ξαναεμφανίζεται με τα
+           ίδια στοιχεία, αφού δεν έχει γίνει reset), ή "Επιβεβαίωση & Πληρωμή"
+           για να προχωρήσει πραγματικά στο Stripe. -->
+      <div class="success-view" id="reviewView">
+        <div class="check" style="background:var(--blue-bg)">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1FA9BC" stroke-width="2.5"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <h3>Έλεγξε τα στοιχεία σου</h3>
+        <p>Πριν προχωρήσεις στην πληρωμή, βεβαιώσου ότι όλα είναι σωστά.</p>
+        <div class="summary-box" id="reviewBox"></div>
+        <div style="display:flex; gap:10px; justify-content:center;">
+          <button type="button" class="cancel-btn" id="reviewBackBtn">← Πίσω, θέλω να αλλάξω κάτι</button>
+          <button type="button" class="submit-btn" id="reviewConfirmBtn">Επιβεβαίωση &amp; Πληρωμή</button>
+        </div>
+      </div>
+
       <div class="success-view" id="successView">
         <div class="check">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#3E9B5C" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
@@ -926,7 +945,7 @@ function buildBookingModal(){
     return errors;
   }
 
-  overlay.querySelector('#bookingForm').addEventListener('submit', async (e)=>{
+  overlay.querySelector('#bookingForm').addEventListener('submit', (e)=>{
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = Object.fromEntries(fd.entries());
@@ -949,9 +968,40 @@ function buildBookingModal(){
     data.acceptedTerms = true;
     data.submittedAt = new Date().toISOString();
 
-    const submitBtn = document.getElementById('submitBookingBtn');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Αποστολή...';
+    // 👉 ΔΕΝ στέλνουμε τίποτα ακόμα — δείχνουμε πρώτα το βήμα επισκόπησης.
+    // Η φόρμα παραμένει ακριβώς όπως τη συμπλήρωσε ο χρήστης (δεν κάνουμε
+    // reset), ώστε αν πατήσει "Πίσω" να τη βρει ξανά όπως ήταν.
+    pendingBookingData = data;
+    document.getElementById('reviewBox').innerHTML = `
+      <div><span>Ονοματεπώνυμο</span><span>${data.fullName}</span></div>
+      <div><span>Email</span><span>${data.email}</span></div>
+      <div><span>Ξενοδοχείο</span><span>${data.hotel}</span></div>
+      <div><span>Τύπος δωματίου</span><span>${data.roomType}</span></div>
+      <div><span>Ημερομηνίες</span><span>${data.checkin} → ${data.checkout}</span></div>
+      <div><span>Άτομα</span><span>${data.guests}</span></div>
+      <div><span>Συνολικό ποσό</span><span>€${data.amount}</span></div>
+      <div><span>Τιμολόγηση</span><span>${data.billingType==='invoice' ? 'Τιμολόγιο' : 'Απόδειξη'}</span></div>
+    `;
+    e.target.style.display = 'none';
+    overlay.querySelector('.modal-head p').textContent = 'Επισκόπηση πριν την πληρωμή';
+    document.getElementById('reviewView').classList.add('show');
+  });
+
+  // 👉 "Πίσω" — κλείνει την επισκόπηση, ξαναδείχνει τη φόρμα με τα ίδια στοιχεία
+  overlay.querySelector('#reviewBackBtn').addEventListener('click', ()=>{
+    document.getElementById('reviewView').classList.remove('show');
+    overlay.querySelector('#bookingForm').style.display = 'block';
+    overlay.querySelector('.modal-head p').textContent = 'Asteria Domus, Glyfada, Athens — October 21–23, 2026';
+  });
+
+  // 👉 "Επιβεβαίωση & Πληρωμή" — ΕΔΩ γίνεται η πραγματική αποστολή στη βάση/Stripe
+  overlay.querySelector('#reviewConfirmBtn').addEventListener('click', async ()=>{
+    const data = pendingBookingData;
+    if(!data) return;
+
+    const confirmBtn = document.getElementById('reviewConfirmBtn');
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Αποστολή...';
 
     let saved = false;
     let waitlisted = false;
@@ -991,6 +1041,8 @@ function buildBookingModal(){
       console.error('Booking submit failed:', err);
     }
 
+    document.getElementById('reviewView').classList.remove('show');
+
     // 👉 Το περιεχόμενο της οθόνης επιβεβαίωσης αλλάζει ανάλογα αν η κράτηση
     // πέρασε κανονικά ή μπήκε σε λίστα αναμονής (sold out).
     if(waitlisted){
@@ -1024,8 +1076,6 @@ function buildBookingModal(){
         <div><span>Αποθηκεύτηκε στη βάση</span><span style="color:${saved ? '#3E9B5C' : '#D63A2E'}">${saved ? 'Ναι ✓' : 'ΟΧΙ — έλεγξε το webhook URL'}</span></div>
       `;
     }
-    e.target.style.display = 'none';
-    overlay.querySelector('.modal-head').style.display = 'none';
     document.getElementById('successView').classList.add('show');
   });
 
@@ -1038,6 +1088,8 @@ function openBookingForm(hotelName){
   else{
     overlay.querySelector('#bookingForm').style.display = 'block';
     overlay.querySelector('.modal-head').style.display = 'flex';
+    overlay.querySelector('.modal-head p').textContent = 'Asteria Domus, Glyfada, Athens — October 21–23, 2026';
+    overlay.querySelector('#reviewView').classList.remove('show');
     overlay.querySelector('#successView').classList.remove('show');
     overlay.querySelector('#bookingForm').reset();
     overlay.querySelector('#submitBookingBtn').disabled = true;
