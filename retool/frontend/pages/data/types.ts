@@ -7,7 +7,7 @@ export type Booking = {
   checkout: string | null
   amount: number | null
   companion: string | null
-  status: "paid" | "pending" | "cancelled" | "waitlisted" | "hosted"
+  status: "paid" | "pending" | "cancelled" | "confirmed" | "waitlisted" | "hosted"
   email: string | null
   mobile: string | null
   guests: number | null
@@ -43,6 +43,7 @@ export type AvailabilityRow = {
   available: number
   stars: number | null
   breakfast_included: boolean | null
+  breakfast_extra_price: number | null
 }
 
 export type Change = {

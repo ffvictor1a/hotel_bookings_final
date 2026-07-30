@@ -83,11 +83,28 @@ export default function AllotmentsSection({ rows, loading }: AllotmentsSectionPr
             const hotelAvailable = hotelRows.reduce((s, r) => s + r.available, 0)
             const hotelStars = hotelRows[0]?.stars ?? null
             const breakfastIncluded = hotelRows[0]?.breakfast_included ?? null
+            const breakfastExtraPrice = hotelRows[0]?.breakfast_extra_price ?? null
 
             // Stars label: 3★, 4★, 5★
             const starsLabel = hotelStars !== null && hotelStars > 0
               ? `${hotelStars}★`
               : null
+
+            // Breakfast badge label + style
+            let breakfastLabel: string | null = null
+            let breakfastCls = "bg-muted text-muted-foreground"
+            if (breakfastIncluded === false) {
+              breakfastLabel = t.withoutBreakfast
+              breakfastCls = "bg-muted text-muted-foreground"
+            } else if (breakfastIncluded === true) {
+              if (breakfastExtraPrice && breakfastExtraPrice > 0) {
+                breakfastLabel = `Πρωινό +€${breakfastExtraPrice}/άτομο`
+                breakfastCls = "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+              } else {
+                breakfastLabel = t.withBreakfast
+                breakfastCls = "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+              }
+            }
 
             return (
               <Card key={hotel} className="overflow-hidden">
@@ -95,23 +112,17 @@ export default function AllotmentsSection({ rows, loading }: AllotmentsSectionPr
                   <CardTitle className="text-sm font-semibold leading-snug">{hotel}</CardTitle>
 
                   {/* Stars + breakfast badges */}
-                  {(starsLabel !== null || breakfastIncluded !== null) && (
+                  {(starsLabel !== null || breakfastLabel !== null) && (
                     <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                       {starsLabel !== null && (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                           {starsLabel}
                         </span>
                       )}
-                      {breakfastIncluded !== null && (
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                          breakfastIncluded
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                            : "bg-muted text-muted-foreground"
-                        }`}>
-                          {breakfastIncluded
-                            ? <><Coffee className="w-3 h-3" />{t.withBreakfast}</>
-                            : t.withoutBreakfast
-                          }
+                      {breakfastLabel !== null && (
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${breakfastCls}`}>
+                          {breakfastIncluded && <Coffee className="w-3 h-3" />}
+                          {breakfastLabel}
                         </span>
                       )}
                     </div>

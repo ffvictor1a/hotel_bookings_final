@@ -8,7 +8,7 @@ import {
 } from "recharts"
 import {
   Hotel, BadgeDollarSign, CheckCircle2, Clock, XCircle,
-  ChevronUp, ChevronDown, Search, AlertTriangle, Plus, Ban, Pencil, Eye, Building2,
+  ChevronUp, ChevronDown, Search, Plus, Ban, Pencil, Eye, Building2,
   ExternalLink,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../lib/shadcn/card"
@@ -47,6 +47,7 @@ const STATUS_STYLE = {
   paid:       "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700",
   pending:    "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700",
   cancelled:  "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700",
+  confirmed:  "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-700",
   waitlisted: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
   hosted:     "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-700",
 }
@@ -67,6 +68,7 @@ function StatusBadge({ status }: { status: string }) {
     status === "paid"       ? t.statusPaid
     : status === "pending"    ? t.statusPending
     : status === "cancelled"  ? t.statusCancelled
+    : status === "confirmed"  ? t.statusConfirmed
     : status === "waitlisted" ? t.statusWaitlisted
     : status === "hosted"     ? t.statusHosted
     : status ?? "—"
@@ -97,7 +99,7 @@ function KpiCard({ title, value, icon, iconBg, loading, onClick }: KpiCardProps)
         <CardContent className="p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1 min-w-0">
-              <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground break-words">{title}</p>
               {loading
                 ? <Skeleton className="h-8 w-24" />
                 : <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{value}</p>
@@ -135,7 +137,7 @@ function BookingsBarChart({ data, loading, onHotelClick }: {
   }, [data])
 
   const total = useMemo(() => chartData.reduce((s, d) => s + d.bookings, 0), [chartData])
-  const tickFormatter = (v: string) => v.length > 16 ? v.slice(0, 14) + "…" : v
+  const tickFormatter = (v: string) => v
 
   return (
     <Card>
@@ -474,7 +476,7 @@ function BookingsTable({ data, loading, onCancelSuccess, onEditBooking }: {
       accessorKey: "full_name",
       header: t.guestName,
       cell: ({ getValue }) => (
-        <span className="font-medium text-foreground block w-full min-w-0 truncate">
+        <span className="font-medium text-foreground break-words">
           {getValue<string | null>() ?? "—"}
         </span>
       ),
@@ -484,7 +486,7 @@ function BookingsTable({ data, loading, onCancelSuccess, onEditBooking }: {
       header: t.hotel,
       meta: { className: "hidden sm:table-cell" } satisfies ColMeta,
       cell: ({ getValue }) => (
-        <span className="block w-full min-w-0 truncate text-muted-foreground">
+        <span className="break-words text-muted-foreground">
           {getValue<string | null>() ?? "—"}
         </span>
       ),
@@ -494,7 +496,7 @@ function BookingsTable({ data, loading, onCancelSuccess, onEditBooking }: {
       header: t.roomType,
       meta: { className: "hidden lg:table-cell" } satisfies ColMeta,
       cell: ({ getValue }) => (
-        <span className="block w-full min-w-0 truncate">
+        <span className="break-words">
           {getValue<string | null>() ?? "—"}
         </span>
       ),
@@ -717,11 +719,8 @@ function DashboardContent() {
     const cancelled = bookings.filter((b) => b.status === "cancelled")
     const nonWaitlisted = bookings.filter((b) => b.status !== "waitlisted")
     const revenue = paid.reduce((s, b) => s + (b.amount ?? 0), 0)
-    const pendingChanges = changes.filter(
-      (c) => c.requires_payment === "yes" || c.requires_refund === "yes"
-    )
-    return { total: nonWaitlisted.length, nonWaitlisted, revenue, paid, pending, cancelled, pendingChanges }
-  }, [bookings, changes])
+    return { total: nonWaitlisted.length, nonWaitlisted, revenue, paid, pending, cancelled }
+  }, [bookings])
 
   const sortedBookings = useMemo(
     () => [...bookings].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
@@ -760,7 +759,7 @@ function DashboardContent() {
               <Hotel className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl font-bold text-foreground leading-tight truncate">Hotel Bookings</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-foreground leading-tight">Hotel Bookings</h1>
               <p className="text-xs text-muted-foreground">{t.adminDashboard}</p>
             </div>
           </div>
@@ -822,10 +821,6 @@ function DashboardContent() {
             icon={<XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />}
             iconBg="bg-red-100 dark:bg-red-900/30" loading={bLoading}
             onClick={() => openBookingModal(t.modalCancelledBookings, kpis.cancelled)} />
-          <KpiCard title={t.pendingChanges} value={kpis.pendingChanges.length}
-            icon={<AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 dark:text-orange-400" />}
-            iconBg="bg-orange-100 dark:bg-orange-900/30" loading={cLoading}
-            onClick={() => openChangesModal(t.modalChangesAction, kpis.pendingChanges)} />
         </section>
 
         {/* ── 1. Bar Chart: Κρατήσεις ανά Ξενοδοχείο ─────────────────── */}

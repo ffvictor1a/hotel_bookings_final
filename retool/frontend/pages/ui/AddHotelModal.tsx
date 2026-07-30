@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react"
-import { Plus, Trash2, CheckCircle2, Mail, Coffee } from "lucide-react"
+import { Plus, Trash2, CheckCircle2, Mail } from "lucide-react"
 import { Switch } from "../../lib/shadcn/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../lib/shadcn/dialog"
 import { Label } from "../../lib/shadcn/label"
@@ -26,6 +26,9 @@ type RoomEntry = {
   deadline: string
 }
 
+// breakfast option type
+type BreakfastOption = "none" | "included" | "extra"
+
 type FormState = {
   hotel_name: string
   location: string
@@ -33,7 +36,8 @@ type FormState = {
   hotel_email: string
   stars: number | null
   email_notifications_enabled: boolean
-  breakfast_included: boolean
+  breakfast_option: BreakfastOption
+  breakfast_extra_price: string
   room_types: RoomEntry[]
 }
 
@@ -49,7 +53,8 @@ function initialForm(): FormState {
     hotel_email: "",
     stars: null,
     email_notifications_enabled: true,
-    breakfast_included: true,
+    breakfast_option: "included",
+    breakfast_extra_price: "",
     room_types: [emptyRoom()],
   }
 }
@@ -64,6 +69,8 @@ function validateForm(form: FormState, t: Translations): Record<string, string> 
     errs["hotel_email"] = t.validHotelEmailRequired
   if (form.stars === null)
     errs["stars"] = t.validRequired
+  if (form.breakfast_option === "extra" && (!form.breakfast_extra_price || Number(form.breakfast_extra_price) <= 0))
+    errs["breakfast_extra_price"] = t.validRequired
 
   form.room_types.forEach((rt, idx) => {
     if (!rt.room_type) errs[`rt_${idx}_room_type`] = t.validRequired
@@ -231,7 +238,10 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
         hotel_email: form.hotel_email.trim(),
         stars: form.stars,
         email_notifications_enabled: form.email_notifications_enabled,
-        breakfast_included: form.breakfast_included,
+        breakfast_included: form.breakfast_option !== "none",
+        breakfast_extra_price: form.breakfast_option === "extra" && form.breakfast_extra_price
+          ? Math.round(Number(form.breakfast_extra_price))
+          : null,
         room_types: form.room_types.map((rt) => ({
           room_type: rt.room_type,
           total_allotment: Number(rt.total_allotment),
@@ -320,24 +330,43 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
                     </FieldWrap>
                   </div>
 
-                  {/* ── Breakfast toggle ── */}
-                  <div className="sm:col-span-2">
-                    <label
-                      htmlFor="breakfast-toggle"
-                      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-4 py-3 cursor-pointer select-none"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Coffee className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span className="text-sm font-medium text-foreground">
-                          {t.breakfastIncludedLabel}
-                        </span>
-                      </div>
-                      <Switch
-                        id="breakfast-toggle"
-                        checked={form.breakfast_included}
-                        onCheckedChange={(v) => setField("breakfast_included", v)}
-                      />
-                    </label>
+                  {/* ── Breakfast dropdown ── */}
+                  <div className="sm:col-span-2 space-y-3">
+                    <FieldWrap label={t.breakfastIncludedLabel}>
+                      <Select
+                        value={form.breakfast_option}
+                        onValueChange={(v) => {
+                          setField("breakfast_option", v as BreakfastOption)
+                          if (v !== "extra") {
+                            setField("breakfast_extra_price", "")
+                            setErrors((e) => ({ ...e, breakfast_extra_price: "" }))
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">{t.breakfastNone}</SelectItem>
+                          <SelectItem value="included">{t.breakfastIncluded}</SelectItem>
+                          <SelectItem value="extra">{t.breakfastExtra}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FieldWrap>
+
+                    {form.breakfast_option === "extra" && (
+                      <FieldWrap label={t.breakfastExtraPriceLabel} error={errors["breakfast_extra_price"]}>
+                        <Input
+                          type="number"
+                          min={0}
+                          step={0.5}
+                          value={form.breakfast_extra_price}
+                          onChange={(e) => setField("breakfast_extra_price", e.target.value)}
+                          placeholder="π.χ. 15"
+                          className={errors["breakfast_extra_price"] ? "border-destructive" : ""}
+                        />
+                      </FieldWrap>
+                    )}
                   </div>
 
                   {/* ── Email notifications toggle ── */}

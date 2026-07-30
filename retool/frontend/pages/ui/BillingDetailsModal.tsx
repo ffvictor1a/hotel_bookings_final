@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../lib/shadcn/dialog"
 import { Badge } from "../../lib/shadcn/badge"
 import { Separator } from "../../lib/shadcn/separator"
+import { useLanguage } from "../../utils/LanguageContext"
 import type { Booking } from "../data/types"
 
 const BILLING_LABELS: Record<string, string> = {
@@ -13,13 +14,9 @@ const STATUS_CFG: Record<string, string> = {
   paid:       "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700",
   pending:    "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700",
   cancelled:  "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700",
+  confirmed:  "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-700",
   waitlisted: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
   hosted:     "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-700",
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  paid: "Πληρωμένη", pending: "Εκκρεμής", cancelled: "Ακυρωμένη",
-  waitlisted: "Αναμονή", hosted: "Hosted",
 }
 
 function fmtDate(d: string | null | undefined) {
@@ -52,6 +49,15 @@ type Props = {
 }
 
 export default function BillingDetailsModal({ booking, onClose }: Props) {
+  const { t } = useLanguage()
+  const statusLabel =
+    booking?.status === "paid"       ? t.statusPaid
+    : booking?.status === "pending"    ? t.statusPending
+    : booking?.status === "cancelled"  ? t.statusCancelled
+    : booking?.status === "confirmed"  ? t.statusConfirmed
+    : booking?.status === "waitlisted" ? t.statusWaitlisted
+    : booking?.status === "hosted"     ? t.statusHosted
+    : (booking?.status ?? "—")
   const isReceipt = booking?.billing_type === "receipt"
   const isInvoice = booking?.billing_type === "invoice"
   const hasCompanion = !!booking?.companion
@@ -77,7 +83,7 @@ export default function BillingDetailsModal({ booking, onClose }: Props) {
                   <dt className="text-xs font-medium text-muted-foreground">Κατάσταση</dt>
                   <dd>
                     <Badge variant="outline" className={`text-xs ${STATUS_CFG[booking.status] ?? "bg-muted text-muted-foreground border-border"}`}>
-                      {STATUS_LABELS[booking.status] ?? booking.status}
+                      {statusLabel}
                     </Badge>
                   </dd>
                 </div>

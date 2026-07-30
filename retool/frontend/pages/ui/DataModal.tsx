@@ -3,15 +3,17 @@ import { Badge } from "../../lib/shadcn/badge"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "../../lib/shadcn/table"
+import { useLanguage } from "../../utils/LanguageContext"
 import type { Booking, Change } from "../data/types"
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-const STATUS_CFG = {
-  paid:       { label: "Πληρωμένη",        cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700" },
-  pending:    { label: "Εκκρεμής",         cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700" },
-  cancelled:  { label: "Ακυρωμένη",        cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700" },
-  waitlisted: { label: "Λίστα Αναμονής",   cls: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-700" },
-  hosted:     { label: "Hosted",           cls: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-700" },
+// ── Status style map ──────────────────────────────────────────────────────────
+const STATUS_CLS: Record<string, string> = {
+  paid:       "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700",
+  pending:    "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-700",
+  cancelled:  "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-700",
+  confirmed:  "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-700",
+  waitlisted: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
+  hosted:     "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-700",
 }
 
 function fmtDate(d: string) {
@@ -26,6 +28,22 @@ function fmtDatetime(d: string) {
 
 function fmtEur(n: number) {
   return new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(n)
+}
+
+// ── Translated status badge ───────────────────────────────────────────────────
+function StatusBadge({ status }: { status: string | null | undefined }) {
+  const { t } = useLanguage()
+  const s = String(status ?? "").toLowerCase()
+  const cls = STATUS_CLS[s] ?? "bg-muted text-muted-foreground border-border"
+  const label =
+    s === "paid"       ? t.statusPaid
+    : s === "pending"    ? t.statusPending
+    : s === "cancelled"  ? t.statusCancelled
+    : s === "confirmed"  ? t.statusConfirmed
+    : s === "waitlisted" ? t.statusWaitlisted
+    : s === "hosted"     ? t.statusHosted
+    : status ?? "—"
+  return <Badge variant="outline" className={`text-xs ${cls}`}>{label}</Badge>
 }
 
 // ── sub-tables ────────────────────────────────────────────────────────────────
@@ -46,26 +64,23 @@ function BookingsTable({ rows }: { rows: Booking[] }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((b) => {
-            const sc = STATUS_CFG[b.status] ?? { label: b.status ?? "—", cls: "bg-muted text-muted-foreground border-border" }
-            return (
-              <TableRow key={b.id} className="hover:bg-muted/40">
-                <TableCell className="px-4 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">{b.id}</TableCell>
-                <TableCell className="px-4 py-2.5 font-medium text-sm">
-                  <span className="block max-w-[140px] truncate">{b.full_name ?? "—"}</span>
-                </TableCell>
-                <TableCell className="px-4 py-2.5 text-sm text-muted-foreground">
-                  <span className="block max-w-[140px] truncate">{b.hotel ?? "—"}</span>
-                </TableCell>
-                <TableCell className="px-4 py-2.5 text-sm whitespace-nowrap text-muted-foreground">{b.checkin ? fmtDate(b.checkin) : "—"}</TableCell>
-                <TableCell className="px-4 py-2.5 text-sm whitespace-nowrap text-muted-foreground">{b.checkout ? fmtDate(b.checkout) : "—"}</TableCell>
-                <TableCell className="px-4 py-2.5 text-sm font-semibold tabular-nums whitespace-nowrap">{fmtEur(b.amount ?? 0)}</TableCell>
-                <TableCell className="px-4 py-2.5">
-                  <Badge variant="outline" className={`text-xs ${sc.cls}`}>{sc.label}</Badge>
-                </TableCell>
-              </TableRow>
-            )
-          })}
+          {rows.map((b) => (
+            <TableRow key={b.id} className="hover:bg-muted/40">
+              <TableCell className="px-4 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">{b.id}</TableCell>
+              <TableCell className="px-4 py-2.5 font-medium text-sm break-words max-w-[160px]">
+                {b.full_name ?? "—"}
+              </TableCell>
+              <TableCell className="px-4 py-2.5 text-sm text-muted-foreground break-words max-w-[160px]">
+                {b.hotel ?? "—"}
+              </TableCell>
+              <TableCell className="px-4 py-2.5 text-sm whitespace-nowrap text-muted-foreground">{b.checkin ? fmtDate(b.checkin) : "—"}</TableCell>
+              <TableCell className="px-4 py-2.5 text-sm whitespace-nowrap text-muted-foreground">{b.checkout ? fmtDate(b.checkout) : "—"}</TableCell>
+              <TableCell className="px-4 py-2.5 text-sm font-semibold tabular-nums whitespace-nowrap">{fmtEur(b.amount ?? 0)}</TableCell>
+              <TableCell className="px-4 py-2.5">
+                <StatusBadge status={b.status} />
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     </div>
@@ -91,23 +106,13 @@ function ChangesTable({ rows }: { rows: Change[] }) {
         <TableBody>
           {rows.map((c) => (
             <TableRow key={c.id} className="hover:bg-muted/40">
-              <TableCell className="px-4 py-2.5 font-medium text-sm">
-                <span className="block max-w-[120px] truncate">{c.guest_name}</span>
-              </TableCell>
-              <TableCell className="px-4 py-2.5 text-sm text-muted-foreground">
-                <span className="block max-w-[130px] truncate">{c.hotel}</span>
-              </TableCell>
+              <TableCell className="px-4 py-2.5 font-medium text-sm break-words max-w-[130px]">{c.guest_name}</TableCell>
+              <TableCell className="px-4 py-2.5 text-sm text-muted-foreground break-words max-w-[140px]">{c.hotel}</TableCell>
               <TableCell className="px-4 py-2.5 text-sm whitespace-nowrap text-muted-foreground">{c.changed_by}</TableCell>
               <TableCell className="px-4 py-2.5 text-sm whitespace-nowrap text-muted-foreground">{fmtDatetime(c.changed_at)}</TableCell>
-              <TableCell className="px-4 py-2.5 text-sm text-muted-foreground">
-                <span className="block max-w-[160px] truncate">{c.change_description}</span>
-              </TableCell>
-              <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
-                <span className="block max-w-[100px] truncate">{c.old_value}</span>
-              </TableCell>
-              <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
-                <span className="block max-w-[100px] truncate">{c.new_value}</span>
-              </TableCell>
+              <TableCell className="px-4 py-2.5 text-sm text-muted-foreground break-words max-w-[180px]">{c.change_description}</TableCell>
+              <TableCell className="px-4 py-2.5 text-xs text-muted-foreground break-words max-w-[110px]">{c.old_value}</TableCell>
+              <TableCell className="px-4 py-2.5 text-xs text-muted-foreground break-words max-w-[110px]">{c.new_value}</TableCell>
               <TableCell className={`px-4 py-2.5 text-sm font-semibold tabular-nums whitespace-nowrap ${
                 c.amount_delta > 0 ? "text-emerald-600 dark:text-emerald-400"
                 : c.amount_delta < 0 ? "text-red-600 dark:text-red-400"
@@ -142,7 +147,7 @@ export default function DataModal({ state, onClose }: DataModalProps) {
       <DialogContent className="max-w-5xl w-[95vw] p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-4 sm:px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3 min-w-0 pr-8">
-            <DialogTitle className="text-base font-semibold truncate">{state?.title}</DialogTitle>
+            <DialogTitle className="text-base font-semibold break-words">{state?.title}</DialogTitle>
             <span className="shrink-0 text-xs font-medium bg-muted text-muted-foreground rounded-full px-2.5 py-0.5">
               {count} {count === 1 ? "εγγραφή" : "εγγραφές"}
             </span>
