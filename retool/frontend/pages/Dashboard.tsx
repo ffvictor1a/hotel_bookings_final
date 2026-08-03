@@ -25,6 +25,7 @@ import { useGetAvailability } from "../hooks/backend/allotments"
 import { useGetChanges } from "../hooks/backend/changes"
 
 import AllotmentsSection from "./ui/AllotmentsSection"
+import AllBookingsSection from "./ui/AllBookingsSection"
 import ReportsTab from "./ReportsTab"
 import ChangesSection from "./ui/ChangesSection"
 import DataModal, { type ModalState } from "./ui/DataModal"
@@ -839,6 +840,9 @@ function DashboardContent() {
         <BookingsTable data={sortedBookings} loading={bLoading}
           onCancelSuccess={refreshAll}
           onEditBooking={(b) => setEditingBooking(b)} />
+
+        {/* ── Expandable booking cards ─────────────────────────────────── */}
+        <AllBookingsSection bookings={sortedBookings} loading={bLoading} />
 
         {/* ── β. Αλλαγές (audit log) ───────────────────────────────────── */}
         <ChangesSection changes={changes} loading={cLoading}

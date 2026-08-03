@@ -34,6 +34,7 @@ type FormState = {
   location: string
   phone: string
   hotel_email: string
+  hotel_email_cc: string
   stars: number | null
   email_notifications_enabled: boolean
   breakfast_option: BreakfastOption
@@ -51,6 +52,7 @@ function initialForm(): FormState {
     location: "",
     phone: "",
     hotel_email: "",
+    hotel_email_cc: "",
     stars: null,
     email_notifications_enabled: true,
     breakfast_option: "included",
@@ -236,6 +238,7 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
         location: form.location.trim(),
         phone: form.phone.trim(),
         hotel_email: form.hotel_email.trim(),
+        hotel_email_cc: form.hotel_email_cc.trim() || null,
         stars: form.stars,
         email_notifications_enabled: form.email_notifications_enabled,
         breakfast_included: form.breakfast_option !== "none",
@@ -307,6 +310,16 @@ export default function AddHotelModal({ open, onClose, onSuccess }: Props) {
                         onChange={(e) => setField("hotel_email", e.target.value)}
                         placeholder="π.χ. info@hotel.gr"
                         className={errors["hotel_email"] ? "border-destructive" : ""}
+                      />
+                    </FieldWrap>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <FieldWrap label={t.hotelEmailCcLabel}>
+                      <Input
+                        type="text"
+                        value={form.hotel_email_cc}
+                        onChange={(e) => setField("hotel_email_cc", e.target.value)}
+                        placeholder="π.χ. assistant@hotel.gr, reception@hotel.gr"
                       />
                     </FieldWrap>
                   </div>
